@@ -1,0 +1,731 @@
+{% liquid
+  assign section_uid = 'countdown-' | append: section.id
+%}
+
+<section
+  id="{{ section_uid }}"
+  class="lpflip-countdown"
+  data-section-id="{{ section.id }}"
+  data-end-datetime="{{ section.settings.end_datetime | escape }}"
+  data-expired-text="{{ section.settings.expired_text | escape }}"
+  data-hide-on-expire="{{ section.settings.hide_timer_on_expire }}"
+  style="
+    --lpflip-bg: {{ section.settings.bg_color }};
+    --lpflip-text: {{ section.settings.text_color }};
+    --lpflip-tile-bg-top: {{ section.settings.tile_bg_top }};
+    --lpflip-tile-bg-bottom: {{ section.settings.tile_bg_bottom }};
+    --lpflip-tile-border: {{ section.settings.tile_border }};
+    --lpflip-tile-text: {{ section.settings.tile_text }};
+    --lpflip-seam: {{ section.settings.tile_seam }};
+    --lpflip-radius: {{ section.settings.tile_radius }}px;
+    --lpflip-tile-w: {{ section.settings.tile_width }}px;
+    --lpflip-tile-h: {{ section.settings.tile_height }}px;
+    --lpflip-gap-groups: {{ section.settings.group_gap }}px;
+    --lpflip-gap-digits: {{ section.settings.digit_gap }}px;
+  "
+>
+  <div class="lpflip-countdown__inner page-width">
+    {% if section.settings.title != blank %}
+      <h2 class="lpflip-countdown__title">{{ section.settings.title }}</h2>
+    {% endif %}
+
+    {% if section.settings.subtitle != blank %}
+      <div class="lpflip-countdown__subtitle">{{ section.settings.subtitle }}</div>
+    {% endif %}
+
+    <div class="lpflip-countdown__timer" aria-live="polite" aria-atomic="true">
+      <!-- DAYS -->
+      <div class="lpflip-countdown__group" data-group="days">
+        <div class="lpflip-countdown__digits lpflip-countdown__digits--days">
+          <div class="lpflip-digit lpflip-digit--day-hundreds is-hidden" data-digit="days-hundreds" aria-hidden="true"></div>
+          <div class="lpflip-digit" data-digit="days-tens"></div>
+          <div class="lpflip-digit" data-digit="days-ones"></div>
+        </div>
+        <div class="lpflip-countdown__label">{{ section.settings.label_days }}</div>
+      </div>
+
+      <!-- HOURS -->
+      <div class="lpflip-countdown__group" data-group="hours">
+        <div class="lpflip-countdown__digits">
+          <div class="lpflip-digit" data-digit="hours-tens"></div>
+          <div class="lpflip-digit" data-digit="hours-ones"></div>
+        </div>
+        <div class="lpflip-countdown__label">{{ section.settings.label_hours }}</div>
+      </div>
+
+      <!-- MINUTES -->
+      <div class="lpflip-countdown__group" data-group="minutes">
+        <div class="lpflip-countdown__digits">
+          <div class="lpflip-digit" data-digit="minutes-tens"></div>
+          <div class="lpflip-digit" data-digit="minutes-ones"></div>
+        </div>
+        <div class="lpflip-countdown__label">{{ section.settings.label_minutes }}</div>
+      </div>
+
+      <!-- SECONDS -->
+      <div class="lpflip-countdown__group" data-group="seconds">
+        <div class="lpflip-countdown__digits">
+          <div class="lpflip-digit" data-digit="seconds-tens"></div>
+          <div class="lpflip-digit" data-digit="seconds-ones"></div>
+        </div>
+        <div class="lpflip-countdown__label">{{ section.settings.label_seconds }}</div>
+      </div>
+    </div>
+
+    <div class="lpflip-countdown__expired" hidden>
+      <p class="lpflip-countdown__expired-text"></p>
+    </div>
+  </div>
+
+  <style>
+    #{{ section_uid }}.lpflip-countdown{
+      background: var(--lpflip-bg);
+      color: var(--lpflip-text);
+      padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+      overflow: hidden;
+    }
+
+    #{{ section_uid }} .lpflip-countdown__inner{
+      text-align: center;
+    }
+
+    #{{ section_uid }} .lpflip-countdown__title{
+      margin: 0 0 8px;
+      color: var(--lpflip-text);
+      font-size: clamp(24px, 3vw, 40px);
+      line-height: 1.08;
+      font-weight: 700;
+    }
+
+    #{{ section_uid }} .lpflip-countdown__subtitle{
+      margin: 0 0 18px;
+      color: var(--lpflip-text);
+      opacity: 0.95;
+      font-size: clamp(13px, 1.15vw, 16px);
+      line-height: 1.35;
+    }
+
+    #{{ section_uid }} .lpflip-countdown__subtitle p{
+      margin: 0;
+    }
+
+    #{{ section_uid }} .lpflip-countdown__timer{
+      display: grid;
+      grid-template-columns: repeat(4, auto);
+      justify-content: center;
+      align-items: start;
+      gap: 16px var(--lpflip-gap-groups);
+    }
+
+    #{{ section_uid }} .lpflip-countdown__group{
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    #{{ section_uid }} .lpflip-countdown__digits{
+      display: grid;
+      grid-auto-flow: column;
+      gap: var(--lpflip-gap-digits);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #{{ section_uid }} .lpflip-countdown__label{
+      color: var(--lpflip-text);
+      font-size: clamp(14px, 1.2vw, 18px);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ===== Flip Digit ===== */
+    #{{ section_uid }} .lpflip-digit{
+      position: relative;
+      width: var(--lpflip-tile-w);
+      height: var(--lpflip-tile-h);
+      perspective: 900px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      user-select: none;
+      filter: drop-shadow(0 3px 3px rgba(0,0,0,0.18));
+    }
+
+    #{{ section_uid }} .lpflip-digit.is-hidden{
+      display: none;
+    }
+
+    /* Base half/flap boxes */
+    #{{ section_uid }} .lpflip-digit__half,
+    #{{ section_uid }} .lpflip-digit__flap{
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      overflow: hidden;
+      color: var(--lpflip-tile-text);
+      border-left: 1px solid var(--lpflip-tile-border);
+      border-right: 1px solid var(--lpflip-tile-border);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      text-shadow: 0 2px 2px rgba(0,0,0,0.15);
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    /* Centered numeral inside each cropped half */
+    #{{ section_uid }} .lpflip-digit__val{
+      position: absolute;
+      left: 50%;
+      font-size: calc(var(--lpflip-tile-h) * 0.62);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
+
+    /* top half */
+    #{{ section_uid }} .lpflip-digit__half--top,
+    #{{ section_uid }} .lpflip-digit__flap--top{
+      top: 0;
+      background: linear-gradient(to bottom, var(--lpflip-tile-bg-top), #f1f2f4);
+      border-top: 1px solid var(--lpflip-tile-border);
+      border-top-left-radius: var(--lpflip-radius);
+      border-top-right-radius: var(--lpflip-radius);
+      transform-origin: bottom center;
+      z-index: 3;
+    }
+
+    /* The top half shows the upper half of a centered full-height numeral */
+    #{{ section_uid }} .lpflip-digit__half--top .lpflip-digit__val,
+    #{{ section_uid }} .lpflip-digit__flap--top .lpflip-digit__val{
+      top: 100%;
+    }
+
+    /* bottom half */
+    #{{ section_uid }} .lpflip-digit__half--bottom,
+    #{{ section_uid }} .lpflip-digit__flap--bottom{
+      top: 50%;
+      background: linear-gradient(to bottom, #eef0f2, var(--lpflip-tile-bg-bottom));
+      border-bottom: 1px solid var(--lpflip-tile-border);
+      border-bottom-left-radius: var(--lpflip-radius);
+      border-bottom-right-radius: var(--lpflip-radius);
+      transform-origin: top center;
+      z-index: 2;
+    }
+
+    /* The bottom half shows the lower half of a centered full-height numeral */
+    #{{ section_uid }} .lpflip-digit__half--bottom .lpflip-digit__val,
+    #{{ section_uid }} .lpflip-digit__flap--bottom .lpflip-digit__val{
+      top: 0%;
+    }
+
+    /* flap visibility and layers */
+    #{{ section_uid }} .lpflip-digit__flap{
+      visibility: hidden;
+    }
+
+    #{{ section_uid }} .lpflip-digit__flap--top{
+      z-index: 6;
+    }
+
+    #{{ section_uid }} .lpflip-digit__flap--bottom{
+      z-index: 5;
+      transform: rotateX(90deg);
+    }
+
+    /* center seam */
+    #{{ section_uid }} .lpflip-digit::after{
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(50% - 1px);
+      height: 2px;
+      background: var(--lpflip-seam);
+      z-index: 7;
+      pointer-events: none;
+      opacity: .75;
+    }
+
+    /* side seam notches */
+    #{{ section_uid }} .lpflip-digit::before{
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 3px 50%, rgba(0,0,0,0.22) 0 2.8px, transparent 3px),
+        radial-gradient(circle at calc(100% - 3px) 50%, rgba(0,0,0,0.22) 0 2.8px, transparent 3px);
+      background-repeat: no-repeat;
+    }
+
+    /* flipping state */
+    #{{ section_uid }} .lpflip-digit.is-flipping .lpflip-digit__flap{
+      visibility: visible;
+    }
+
+    #{{ section_uid }} .lpflip-digit.is-flipping .lpflip-digit__flap--top{
+      animation: lpflip-top-{{ section.id }} 0.24s ease-in forwards;
+    }
+
+    #{{ section_uid }} .lpflip-digit.is-flipping .lpflip-digit__flap--bottom{
+      animation: lpflip-bottom-{{ section.id }} 0.24s ease-out 0.24s forwards;
+    }
+
+    @keyframes lpflip-top-{{ section.id }}{
+      from { transform: rotateX(0deg); filter: brightness(1); }
+      to   { transform: rotateX(-90deg); filter: brightness(0.9); }
+    }
+
+    @keyframes lpflip-bottom-{{ section.id }}{
+      from { transform: rotateX(90deg); filter: brightness(0.9); }
+      to   { transform: rotateX(0deg); filter: brightness(1); }
+    }
+
+    #{{ section_uid }} .lpflip-countdown__expired{
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    #{{ section_uid }} .lpflip-countdown__expired-text{
+      margin: 0;
+      color: var(--lpflip-text);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    @media (max-width: 980px){
+      #{{ section_uid }} .lpflip-countdown__timer{
+        grid-template-columns: repeat(2, auto);
+      }
+    }
+
+    @media (max-width: 640px){
+      #{{ section_uid }}.lpflip-countdown{
+        padding-top: max(16px, calc({{ section.settings.padding_top }}px * 0.7));
+        padding-bottom: max(14px, calc({{ section.settings.padding_bottom }}px * 0.7));
+      }
+
+      #{{ section_uid }} .lpflip-countdown__group{
+        gap: 8px;
+      }
+
+      #{{ section_uid }} .lpflip-countdown__label{
+        font-size: 13px;
+        letter-spacing: 0.05em;
+      }
+    }
+  </style>
+
+  <script>
+    (function(){
+      var root = document.getElementById('{{ section_uid }}');
+      if (!root) return;
+      if (root.dataset.countdownInitialized === 'true') return;
+      root.dataset.countdownInitialized = 'true';
+
+      var endRaw = root.getAttribute('data-end-datetime') || '';
+      var expiredText = root.getAttribute('data-expired-text') || 'This countdown has ended.';
+      var hideTimerOnExpire = root.getAttribute('data-hide-on-expire') === 'true';
+
+      var endDate = new Date(endRaw);
+      if (isNaN(endDate.getTime())) {
+        console.warn('[Countdown Section] Invalid date/time. Use ISO 8601, e.g. 2026-03-01T00:00:00-05:00');
+        return;
+      }
+
+      var digitMap = {};
+      root.querySelectorAll('.lpflip-digit').forEach(function(node){
+        digitMap[node.getAttribute('data-digit')] = node;
+      });
+
+      var daysHundredsNode = digitMap['days-hundreds'];
+      var expiredWrap = root.querySelector('.lpflip-countdown__expired');
+      var expiredTextNode = root.querySelector('.lpflip-countdown__expired-text');
+      var timerWrap = root.querySelector('.lpflip-countdown__timer');
+
+      function buildDigit(node, initialValue){
+        var v = String(initialValue);
+
+        node.innerHTML =
+          '<div class="lpflip-digit__half lpflip-digit__half--top"><span class="lpflip-digit__val">' + v + '</span></div>' +
+          '<div class="lpflip-digit__half lpflip-digit__half--bottom"><span class="lpflip-digit__val">' + v + '</span></div>' +
+          '<div class="lpflip-digit__flap lpflip-digit__flap--top"><span class="lpflip-digit__val">' + v + '</span></div>' +
+          '<div class="lpflip-digit__flap lpflip-digit__flap--bottom"><span class="lpflip-digit__val">' + v + '</span></div>';
+
+        node.dataset.value = v;
+
+        node._flip = {
+          topHalfVal: node.querySelector('.lpflip-digit__half--top .lpflip-digit__val'),
+          bottomHalfVal: node.querySelector('.lpflip-digit__half--bottom .lpflip-digit__val'),
+          topFlapVal: node.querySelector('.lpflip-digit__flap--top .lpflip-digit__val'),
+          bottomFlapVal: node.querySelector('.lpflip-digit__flap--bottom .lpflip-digit__val'),
+          bottomFlapBox: node.querySelector('.lpflip-digit__flap--bottom')
+        };
+      }
+
+      function setDigitInstant(node, value){
+        var v = String(value);
+        if (!node._flip) buildDigit(node, v);
+
+        node.dataset.value = v;
+        node._flip.topHalfVal.textContent = v;
+        node._flip.bottomHalfVal.textContent = v;
+        node._flip.topFlapVal.textContent = v;
+        node._flip.bottomFlapVal.textContent = v;
+      }
+
+      function flipDigit(node, nextValue){
+        var next = String(nextValue);
+        var current = (node.dataset.value != null) ? String(node.dataset.value) : '0';
+
+        if (!node._flip) buildDigit(node, current);
+        if (current === next) return;
+
+        node.classList.remove('is-flipping');
+
+        /* Flaps animate transition */
+        node._flip.topFlapVal.textContent = current;   /* old number folds down */
+        node._flip.bottomFlapVal.textContent = next;   /* new number rises into place */
+
+        /* Static halves switch immediately so top appears updated during flip */
+        node._flip.topHalfVal.textContent = next;
+        node._flip.bottomHalfVal.textContent = next;
+
+        void node.offsetWidth; /* restart animation */
+        node.classList.add('is-flipping');
+
+        var onAnimEnd = function(e){
+          if (e.target !== node._flip.bottomFlapBox) return;
+
+          node.classList.remove('is-flipping');
+          node.dataset.value = next;
+
+          node._flip.topHalfVal.textContent = next;
+          node._flip.bottomHalfVal.textContent = next;
+          node._flip.topFlapVal.textContent = next;
+          node._flip.bottomFlapVal.textContent = next;
+
+          node.removeEventListener('animationend', onAnimEnd, true);
+        };
+
+        node.addEventListener('animationend', onAnimEnd, true);
+      }
+
+      function pad2(n){
+        return String(n).padStart(2, '0');
+      }
+
+      function getRemaining(){
+        var now = new Date();
+        var ms = endDate.getTime() - now.getTime();
+
+        if (ms <= 0) {
+          return {
+            expired: true,
+            daysInt: 0,
+            days3: '000',
+            hours: '00',
+            minutes: '00',
+            seconds: '00'
+          };
+        }
+
+        var totalSeconds = Math.floor(ms / 1000);
+        var days = Math.floor(totalSeconds / 86400);
+        var hours = Math.floor((totalSeconds % 86400) / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        var seconds = totalSeconds % 60;
+
+        var safeDays = Math.max(0, Math.min(days, 999));
+
+        return {
+          expired: false,
+          daysInt: safeDays,
+          days3: String(safeDays).padStart(3, '0'),
+          hours: pad2(hours),
+          minutes: pad2(minutes),
+          seconds: pad2(seconds)
+        };
+      }
+
+      function setDaysHundredsVisibility(daysInt){
+        if (!daysHundredsNode) return;
+
+        var showHundreds = daysInt >= 100;
+        if (showHundreds) {
+          daysHundredsNode.classList.remove('is-hidden');
+          daysHundredsNode.setAttribute('aria-hidden', 'false');
+        } else {
+          daysHundredsNode.classList.add('is-hidden');
+          daysHundredsNode.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      var initialized = false;
+      var expiredShown = false;
+      var timerRef = null;
+
+      function render(){
+        var t = getRemaining();
+
+        setDaysHundredsVisibility(t.daysInt);
+
+        var values = {
+          'days-hundreds': t.days3[0],
+          'days-tens': t.days3[1],
+          'days-ones': t.days3[2],
+          'hours-tens': t.hours[0],
+          'hours-ones': t.hours[1],
+          'minutes-tens': t.minutes[0],
+          'minutes-ones': t.minutes[1],
+          'seconds-tens': t.seconds[0],
+          'seconds-ones': t.seconds[1]
+        };
+
+        Object.keys(values).forEach(function(key){
+          var node = digitMap[key];
+          if (!node) return;
+
+          if (!initialized) {
+            setDigitInstant(node, values[key]);
+          } else {
+            flipDigit(node, values[key]);
+          }
+        });
+
+        initialized = true;
+
+        if (t.expired && !expiredShown) {
+          expiredShown = true;
+          if (expiredTextNode) expiredTextNode.textContent = expiredText;
+          if (expiredWrap) expiredWrap.hidden = false;
+          if (hideTimerOnExpire && timerWrap) timerWrap.style.display = 'none';
+        }
+
+        if (t.expired) return;
+
+        var nowMs = Date.now();
+        var delay = 1000 - (nowMs % 1000);
+        timerRef = window.setTimeout(render, delay);
+      }
+
+      render();
+
+      document.addEventListener('shopify:section:unload', function(evt){
+        if (!evt || !evt.detail || !evt.detail.sectionId) return;
+        if (evt.detail.sectionId === '{{ section.id }}' && timerRef) {
+          clearTimeout(timerRef);
+        }
+      });
+    })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Countdown",
+  "settings": [
+    {
+      "type": "text",
+      "id": "end_datetime",
+      "label": "End date/time (ISO 8601)",
+      "default": "2026-03-01T00:00:00-05:00",
+      "info": "Example: 2026-03-01T00:00:00-05:00. Include timezone offset."
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Store closing March 1st at midnight!"
+    },
+    {
+      "type": "richtext",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "<p>All orders will be entered at the completion of the webstore. The webstore contact will be notified when orders are ready.</p>"
+    },
+    {
+      "type": "text",
+      "id": "expired_text",
+      "label": "Expired message",
+      "default": "Pre-orders have ended."
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_timer_on_expire",
+      "label": "Hide timer when expired",
+      "default": false
+    },
+
+    {
+      "type": "header",
+      "content": "Labels"
+    },
+    {
+      "type": "text",
+      "id": "label_days",
+      "label": "Days label",
+      "default": "DAYS"
+    },
+    {
+      "type": "text",
+      "id": "label_hours",
+      "label": "Hours label",
+      "default": "HOURS"
+    },
+    {
+      "type": "text",
+      "id": "label_minutes",
+      "label": "Minutes label",
+      "default": "MINUTES"
+    },
+    {
+      "type": "text",
+      "id": "label_seconds",
+      "label": "Seconds label",
+      "default": "SECONDS"
+    },
+
+    {
+      "type": "header",
+      "content": "Section colors"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background",
+      "default": "#06090F"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#FFFFFF"
+    },
+
+    {
+      "type": "header",
+      "content": "Tile colors"
+    },
+    {
+      "type": "color",
+      "id": "tile_bg_top",
+      "label": "Tile top background",
+      "default": "#F7F7F8"
+    },
+    {
+      "type": "color",
+      "id": "tile_bg_bottom",
+      "label": "Tile bottom background",
+      "default": "#ECEEF1"
+    },
+    {
+      "type": "color",
+      "id": "tile_border",
+      "label": "Tile border",
+      "default": "#C3C7CC"
+    },
+    {
+      "type": "color",
+      "id": "tile_text",
+      "label": "Tile digit text",
+      "default": "#233246"
+    },
+    {
+      "type": "color",
+      "id": "tile_seam",
+      "label": "Tile seam line",
+      "default": "#8A8F96"
+    },
+
+    {
+      "type": "header",
+      "content": "Tile sizing"
+    },
+    {
+      "type": "range",
+      "id": "tile_width",
+      "label": "Tile width",
+      "min": 36,
+      "max": 140,
+      "step": 2,
+      "unit": "px",
+      "default": 82
+    },
+    {
+      "type": "range",
+      "id": "tile_height",
+      "label": "Tile height",
+      "min": 52,
+      "max": 180,
+      "step": 2,
+      "unit": "px",
+      "default": 116
+    },
+    {
+      "type": "range",
+      "id": "tile_radius",
+      "label": "Tile corner radius",
+      "min": 0,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "group_gap",
+      "label": "Gap between groups",
+      "min": 8,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "digit_gap",
+      "label": "Gap between digits",
+      "min": 2,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    }
+  ],
+  "presets": [
+    {
+      "name": "Countdown"
+    }
+  ]
+}
+{% endschema %}
