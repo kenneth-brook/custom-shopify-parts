@@ -1,0 +1,16 @@
+{% case icon %}
+  {% when 'truck' %}
+    <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h11v8H3zM14 10h3l3 3v2h-6zM7 18a1.5 1.5 0 1 0 0 .01M17 18a1.5 1.5 0 1 0 0 .01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% when 'tag' %}
+    <svg viewBox="0 0 24 24" fill="none"><path d="M4 12 12 4h6l2 2v6l-8 8-8-8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/></svg>
+  {% when 'calendar' %}
+    <svg viewBox="0 0 24 24" fill="none"><path d="M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% when 'gift' %}
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v13M4 10h16v11H4zM2 6h20v4H2zM12 6c-1.8 0-4-1-4-2.5S9.4 1 12 6Zm0 0c1.8 0 4-1 4-2.5S14.6 1 12 6Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% when 'heart' %}
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% when 'star' %}
+    <svg viewBox="0 0 24 24" fill="none"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1L3.2 9.4l6.1-.9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% else %}
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 4.6L18 9.4l-3.4 2.8 1 4.6L12 14.8 8.4 16.8l1-4.6L6 9.4l4.2-1.8L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+{% endcase %}

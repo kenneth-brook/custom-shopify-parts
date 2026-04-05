@@ -1,0 +1,1234 @@
+{% liquid
+  assign section_id = 'kc-announcement-bar-' | append: section.id
+  assign enabled_blocks = section.blocks | where: 'settings.enabled', true
+  assign block_count = enabled_blocks.size
+
+  assign variant = section.settings.style_variant | default: 'classic'
+  assign width_mode = section.settings.width_mode | default: 'full'
+  assign height_mode = section.settings.height_mode | default: 'standard'
+  assign text_alignment = section.settings.text_alignment | default: 'center'
+  assign transition_style = section.settings.transition_style | default: 'fade'
+  assign transition_speed = section.settings.transition_speed | default: 'normal'
+  assign color_scheme_mode = section.settings.color_scheme_mode | default: 'theme'
+  assign show_icons = section.settings.show_icons
+  assign show_cta = section.settings.show_cta
+  assign autoplay = section.settings.enable_autoplay
+  assign show_arrows = section.settings.show_arrows
+  assign show_dots = section.settings.show_dots
+  assign show_progress_bar = section.settings.show_progress_bar
+  assign pause_on_hover = section.settings.pause_on_hover
+  assign sticky_bar = section.settings.sticky_bar
+  assign mobile_reduce_motion = section.settings.mobile_reduce_motion
+  assign use_theme_container_if_available = section.settings.use_theme_container_if_available
+
+  assign transition_ms = 520
+  case transition_speed
+    when 'subtle'
+      assign transition_ms = 380
+    when 'normal'
+      assign transition_ms = 520
+    when 'dramatic'
+      assign transition_ms = 760
+  endcase
+
+  assign rotation_seconds = section.settings.rotation_interval | default: 5
+  assign rotation_ms = rotation_seconds | times: 1000
+
+  assign component_classes = 'kc-announcement-bar kc-announcement-bar--' | append: variant
+  assign component_classes = component_classes | append: ' kc-announcement-bar--' | append: width_mode
+  assign component_classes = component_classes | append: ' kc-announcement-bar--' | append: height_mode
+  assign component_classes = component_classes | append: ' kc-announcement-bar--align-' | append: text_alignment
+  assign component_classes = component_classes | append: ' kc-announcement-bar--transition-' | append: transition_style
+
+  if sticky_bar
+    assign component_classes = component_classes | append: ' is-sticky'
+  endif
+
+  if block_count > 1
+    assign component_classes = component_classes | append: ' has-multiple-items'
+  else
+    assign component_classes = component_classes | append: ' has-single-item'
+  endif
+
+  if autoplay and block_count > 1
+    assign component_classes = component_classes | append: ' is-autoplay'
+  endif
+
+  if color_scheme_mode == 'custom'
+    assign component_classes = component_classes | append: ' is-custom-colors'
+  else
+    assign component_classes = component_classes | append: ' is-theme-colors'
+  endif
+
+  assign max_width = section.settings.fallback_max_width | default: 1400
+  assign padding_y = section.settings.section_padding_y | default: 12
+  assign padding_x = section.settings.section_padding_x | default: 20
+
+  assign aria_live_value = 'off'
+  if autoplay == false
+    assign aria_live_value = 'polite'
+  endif
+%}
+
+{% style %}
+  #{{ section_id }} {
+    --kc-ab-bg: {% if color_scheme_mode == 'custom' %}{{ section.settings.background_color }}{% else %}rgb(var(--color-background, 255 255 255)){% endif %};
+    --kc-ab-text: {% if color_scheme_mode == 'custom' %}{{ section.settings.text_color }}{% else %}rgb(var(--color-foreground, 18 18 18)){% endif %};
+    --kc-ab-accent: {% if color_scheme_mode == 'custom' %}{{ section.settings.accent_color }}{% else %}rgb(var(--color-button, 18 18 18)){% endif %};
+    --kc-ab-cta-text: {% if color_scheme_mode == 'custom' %}{{ section.settings.cta_text_color }}{% else %}rgb(var(--color-button-text, 255 255 255)){% endif %};
+    --kc-ab-cta-bg: {% if color_scheme_mode == 'custom' %}{{ section.settings.cta_background_color }}{% else %}rgb(var(--color-button, 18 18 18)){% endif %};
+    --kc-ab-border-color: color-mix(in srgb, var(--kc-ab-text) 10%, transparent);
+    --kc-ab-padding-y: {{ padding_y }}px;
+    --kc-ab-padding-x: {{ padding_x }}px;
+    --kc-ab-max-width: {{ max_width }}px;
+    --kc-ab-transition-ms: {{ transition_ms }}ms;
+    --kc-ab-rotation-ms: {{ rotation_ms }}ms;
+    --kc-ab-radius: 0px;
+    --kc-ab-label-bg: color-mix(in srgb, var(--kc-ab-accent) 12%, transparent);
+    --kc-ab-label-text: var(--kc-ab-text);
+    --kc-ab-shadow: 0 10px 30px rgba(0,0,0,.06);
+    --kc-ab-progress-opacity: 0.18;
+    position: relative;
+    background: var(--kc-ab-bg);
+    color: var(--kc-ab-text);
+    z-index: 30;
+  }
+
+  #{{ section_id }}.is-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__outer {
+    position: relative;
+    overflow: clip;
+    {% if section.settings.border_top %}
+      border-top: 1px solid var(--kc-ab-border-color);
+    {% endif %}
+    {% if section.settings.border_bottom %}
+      border-bottom: 1px solid var(--kc-ab-border-color);
+    {% endif %}
+  }
+
+  #{{ section_id }} .kc-announcement-bar__outer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: {% if section.settings.enable_gradient_overlay %}1{% else %}0{% endif %};
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--kc-ab-accent) 8%, transparent), transparent 42%),
+      linear-gradient(315deg, color-mix(in srgb, var(--kc-ab-text) 6%, transparent), transparent 55%);
+  }
+
+  #{{ section_id }} .kc-announcement-bar__outer::after {
+    content: '';
+    position: absolute;
+    left: -20%;
+    top: 0;
+    height: 1px;
+    width: 40%;
+    pointer-events: none;
+    opacity: {% if section.settings.enable_shimmer_line %}0.75{% else %}0{% endif %};
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--kc-ab-accent) 70%, white), transparent);
+    animation: kcAbShimmer-{{ section.id }} 4.5s linear infinite;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__inner {
+    position: relative;
+    padding: var(--kc-ab-padding-y) var(--kc-ab-padding-x);
+  }
+
+  #{{ section_id }} .kc-announcement-bar__container {
+    width: 100%;
+    margin: 0 auto;
+    max-width: 100%;
+  }
+
+  {% if use_theme_container_if_available %}
+    #{{ section_id }} .kc-announcement-bar__container.page-width {
+      max-width: initial;
+    }
+  {% endif %}
+
+  #{{ section_id }}.kc-announcement-bar--page .kc-announcement-bar__container,
+  #{{ section_id }}.kc-announcement-bar--wide-contained .kc-announcement-bar__container {
+    max-width: var(--kc-ab-max-width);
+  }
+
+  #{{ section_id }} .kc-announcement-bar__shell {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0,1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 1px;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__viewport {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__track {
+    position: relative;
+    min-height: 1px;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__item {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition:
+      opacity var(--kc-ab-transition-ms) ease,
+      transform var(--kc-ab-transition-ms) ease;
+    min-height: 100%;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__item.is-active,
+  #{{ section_id }} .kc-announcement-bar__item.is-entering,
+  #{{ section_id }} .kc-announcement-bar__item.is-leaving {
+    display: flex;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__item.is-active {
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    z-index: 2;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__item.is-entering {
+    opacity: 1;
+    transform: translateY(0);
+    z-index: 3;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__item.is-leaving {
+    opacity: 0;
+    transform: translateY(-8px);
+    z-index: 1;
+  }
+
+  #{{ section_id }}.kc-announcement-bar--transition-slide .kc-announcement-bar__item {
+    transform: translateX(18px);
+  }
+
+  #{{ section_id }}.kc-announcement-bar--transition-slide .kc-announcement-bar__item.is-active,
+  #{{ section_id }}.kc-announcement-bar--transition-slide .kc-announcement-bar__item.is-entering {
+    transform: translateX(0);
+  }
+
+  #{{ section_id }}.kc-announcement-bar--transition-slide .kc-announcement-bar__item.is-leaving {
+    transform: translateX(-18px);
+  }
+
+  #{{ section_id }}.kc-announcement-bar--transition-split_reveal .kc-announcement-bar__item {
+    transform: scale(.985);
+    filter: blur(2px);
+  }
+
+  #{{ section_id }}.kc-announcement-bar--transition-split_reveal .kc-announcement-bar__item.is-active,
+  #{{ section_id }}.kc-announcement-bar--transition-split_reveal .kc-announcement-bar__item.is-entering {
+    transform: scale(1);
+    filter: blur(0);
+  }
+
+  #{{ section_id }} .kc-announcement-bar__content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    flex-wrap: wrap;
+    text-align: inherit;
+  }
+
+  #{{ section_id }}.kc-announcement-bar--align-left .kc-announcement-bar__content,
+  #{{ section_id }}.kc-announcement-bar--align-left .kc-announcement-bar__item {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__icon {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--kc-ab-accent);
+  }
+
+  #{{ section_id }} .kc-announcement-bar__icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--kc-ab-label-bg);
+    color: var(--kc-ab-label-text);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__message {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__subtext {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+    opacity: .78;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: var(--kc-ab-cta-bg);
+    color: var(--kc-ab-cta-text);
+    text-decoration: none;
+    line-height: 1;
+    font-size: 12px;
+    font-weight: 700;
+    transition: transform .22s ease, opacity .22s ease;
+    white-space: nowrap;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__cta:hover {
+    transform: translateY(-1px);
+    opacity: .92;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__control {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--kc-ab-text);
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .22s ease, color .22s ease, transform .22s ease;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__control:hover {
+    background: color-mix(in srgb, var(--kc-ab-text) 8%, transparent);
+    transform: translateY(-1px);
+  }
+
+  #{{ section_id }} .kc-announcement-bar__control:focus-visible,
+  #{{ section_id }} .kc-announcement-bar__cta:focus-visible,
+  #{{ section_id }} .kc-announcement-bar__dot:focus-visible {
+    outline: 2px solid var(--kc-ab-accent);
+    outline-offset: 2px;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__dot {
+    appearance: none;
+    border: 0;
+    background: color-mix(in srgb, var(--kc-ab-text) 18%, transparent);
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    padding: 0;
+    cursor: pointer;
+    transition: transform .22s ease, background .22s ease;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__dot.is-active {
+    background: var(--kc-ab-accent);
+    transform: scale(1.15);
+  }
+
+  #{{ section_id }} .kc-announcement-bar__progress {
+    position: relative;
+    width: min(220px, 40vw);
+    height: 3px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--kc-ab-text) calc(var(--kc-ab-progress-opacity) * 100%), transparent);
+  }
+
+  #{{ section_id }} .kc-announcement-bar__progress-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0%;
+    background: var(--kc-ab-accent);
+    border-radius: inherit;
+    transition: width .12s linear;
+  }
+
+  #{{ section_id }}.kc-announcement-bar--compact .kc-announcement-bar__inner {
+    --kc-ab-padding-y: max(8px, var(--kc-ab-padding-y));
+  }
+
+  #{{ section_id }}.kc-announcement-bar--compact .kc-announcement-bar__message {
+    font-size: 13px;
+  }
+
+  #{{ section_id }}.kc-announcement-bar--tall .kc-announcement-bar__inner {
+    --kc-ab-padding-y: max(16px, var(--kc-ab-padding-y));
+  }
+
+  #{{ section_id }}.kc-announcement-bar--tall .kc-announcement-bar__message {
+    font-size: 15px;
+  }
+
+  #{{ section_id }}.kc-announcement-bar--classic {
+    --kc-ab-shadow: none;
+    --kc-ab-progress-opacity: .14;
+  }
+
+  #{{ section_id }}.kc-announcement-bar--boutique {
+    --kc-ab-radius: 14px;
+    --kc-ab-label-bg: color-mix(in srgb, var(--kc-ab-accent) 14%, transparent);
+    --kc-ab-shadow: 0 14px 36px rgba(0,0,0,.08);
+  }
+
+  #{{ section_id }}.kc-announcement-bar--boutique .kc-announcement-bar__shell {
+    padding-inline: clamp(6px, 1vw, 12px);
+  }
+
+  #{{ section_id }}.kc-announcement-bar--boutique .kc-announcement-bar__viewport {
+    border-radius: var(--kc-ab-radius);
+  }
+
+  #{{ section_id }}.kc-announcement-bar--campaign {
+    --kc-ab-label-bg: var(--kc-ab-accent);
+    --kc-ab-label-text: var(--kc-ab-bg);
+    --kc-ab-progress-opacity: .22;
+  }
+
+  #{{ section_id }}.kc-announcement-bar--campaign .kc-announcement-bar__message {
+    font-weight: 700;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__item[data-accent-style='highlight'] .kc-announcement-bar__label,
+  #{{ section_id }} .kc-announcement-bar__item[data-accent-style='urgent'] .kc-announcement-bar__label {
+    background: var(--block-accent, var(--kc-ab-accent));
+    color: var(--block-accent-contrast, var(--kc-ab-bg));
+  }
+
+  #{{ section_id }} .kc-announcement-bar__item[data-accent-style='subtle'] .kc-announcement-bar__label {
+    opacity: .85;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__item[data-has-link='true'] .kc-announcement-bar__message a,
+  #{{ section_id }} .kc-announcement-bar__item[data-has-link='true'] .kc-announcement-bar__subtext a {
+    color: inherit;
+    text-decoration-thickness: 1px;
+  }
+
+  #{{ section_id }} .kc-announcement-bar__sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0,0,0,0) !important;
+    border: 0 !important;
+  }
+
+  @keyframes kcAbShimmer-{{ section.id }} {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(350%); }
+  }
+
+  @media screen and (max-width: 989px) {
+    #{{ section_id }} .kc-announcement-bar__shell {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    #{{ section_id }} .kc-announcement-bar__controls {
+      justify-content: center;
+    }
+
+    #{{ section_id }} .kc-announcement-bar__content {
+      gap: 10px;
+    }
+
+    #{{ section_id }} .kc-announcement-bar__message {
+      font-size: 13px;
+    }
+
+    #{{ section_id }} .kc-announcement-bar__subtext {
+      font-size: 11px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    #{{ section_id }} .kc-announcement-bar__inner {
+      padding-inline: max(14px, var(--kc-ab-padding-x));
+    }
+
+    #{{ section_id }} .kc-announcement-bar__item,
+    #{{ section_id }} .kc-announcement-bar__content {
+      align-items: center;
+    }
+
+    #{{ section_id }} .kc-announcement-bar__content {
+      flex-direction: column;
+    }
+
+    #{{ section_id }} .kc-announcement-bar__text {
+      align-items: inherit;
+    }
+
+    #{{ section_id }} .kc-announcement-bar__cta {
+      min-height: 32px;
+      padding: 8px 12px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #{{ section_id }} .kc-announcement-bar__outer::after {
+      animation: none;
+    }
+
+    #{{ section_id }} .kc-announcement-bar__item,
+    #{{ section_id }} .kc-announcement-bar__cta,
+    #{{ section_id }} .kc-announcement-bar__control,
+    #{{ section_id }} .kc-announcement-bar__dot,
+    #{{ section_id }} .kc-announcement-bar__progress-fill {
+      transition: none !important;
+    }
+  }
+{% endstyle %}
+
+<div
+  id="{{ section_id }}"
+  class="{{ component_classes }}"
+  data-section-id="{{ section.id }}"
+  data-autoplay="{{ autoplay }}"
+  data-rotation-ms="{{ rotation_ms }}"
+  data-pause-on-hover="{{ pause_on_hover }}"
+  data-show-progress="{{ show_progress_bar }}"
+  data-mobile-reduce-motion="{{ mobile_reduce_motion }}"
+  data-transition-style="{{ transition_style }}"
+  data-block-count="{{ block_count }}"
+>
+  <div class="kc-announcement-bar__outer">
+    <div class="kc-announcement-bar__inner">
+      <div class="kc-announcement-bar__container {% if use_theme_container_if_available %}page-width{% endif %}">
+        <div class="kc-announcement-bar__shell">
+          {% if show_arrows and block_count > 1 %}
+            <div class="kc-announcement-bar__controls kc-announcement-bar__controls--leading" aria-hidden="false">
+              <button class="kc-announcement-bar__control" type="button" name="previous" aria-label="Previous announcement" data-kc-ab-prev>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 15 7.5 10l5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          {% endif %}
+
+          <div class="kc-announcement-bar__viewport" aria-live="{{ aria_live_value }}">
+            <div class="kc-announcement-bar__track" data-kc-ab-track>
+              {% if block_count > 0 %}
+                {% for block in section.blocks %}
+                  {% if block.settings.enabled %}
+                    {% liquid
+                      assign is_active = false
+                      if forloop.first
+                        assign is_active = true
+                      endif
+
+                      assign has_link = false
+                      if block.settings.link_url != blank
+                        assign has_link = true
+                      endif
+
+                      assign item_classes = 'kc-announcement-bar__item'
+                      if is_active
+                        assign item_classes = item_classes | append: ' is-active'
+                      endif
+
+                      assign block_text_color = block.settings.custom_text_color_override
+                      assign block_accent = block.settings.custom_accent_color_override
+                    %}
+                    <div
+                      class="{{ item_classes }}"
+                      data-kc-ab-item
+                      data-index="{{ forloop.index0 }}"
+                      data-accent-style="{{ block.settings.accent_style | default: 'default' }}"
+                      data-has-link="{{ has_link }}"
+                      style="{% if block_text_color != blank %}--block-text: {{ block_text_color }}; color: var(--block-text);{% endif %}{% if block_accent != blank %}--block-accent: {{ block_accent }};{% endif %}"
+                      {{ block.shopify_attributes }}
+                    >
+                      <div class="kc-announcement-bar__content">
+                        {% if block.settings.label != blank %}
+                          <span class="kc-announcement-bar__label">{{ block.settings.label | escape }}</span>
+                        {% endif %}
+
+                        {% if show_icons and block.settings.icon_mode != 'none' %}
+                          <span class="kc-announcement-bar__icon" aria-hidden="true">
+                            {% render 'kc-announcement-bar-icon', icon: block.settings.icon_choice %}
+                          </span>
+                        {% endif %}
+
+                        <div class="kc-announcement-bar__text">
+                          <p class="kc-announcement-bar__message">
+                            {% if has_link and block.settings.cta_text == blank %}
+                              <a href="{{ block.settings.link_url }}">{{ block.settings.message }}</a>
+                            {% else %}
+                              {{ block.settings.message }}
+                            {% endif %}
+                          </p>
+                          {% if block.settings.subtext != blank %}
+                            <p class="kc-announcement-bar__subtext">
+                              {% if has_link and block.settings.cta_text == blank %}
+                                <a href="{{ block.settings.link_url }}">{{ block.settings.subtext }}</a>
+                              {% else %}
+                                {{ block.settings.subtext }}
+                              {% endif %}
+                            </p>
+                          {% endif %}
+                        </div>
+
+                        {% if show_cta and has_link and block.settings.cta_text != blank %}
+                          <a class="kc-announcement-bar__cta" href="{{ block.settings.link_url }}">
+                            {{ block.settings.cta_text | escape }}
+                          </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                <div class="kc-announcement-bar__item is-active">
+                  <div class="kc-announcement-bar__content">
+                    <div class="kc-announcement-bar__text">
+                      <p class="kc-announcement-bar__message">Add announcement blocks to get this bar moving.</p>
+                      <p class="kc-announcement-bar__subtext">This placeholder only appears when the section has no enabled blocks.</p>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if show_arrows and block_count > 1 %}
+            <div class="kc-announcement-bar__controls kc-announcement-bar__controls--trailing" aria-hidden="false">
+              <button class="kc-announcement-bar__control" type="button" name="next" aria-label="Next announcement" data-kc-ab-next>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m7.5 15 5-5-5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          {% endif %}
+        </div>
+
+        {% if block_count > 1 and show_dots or block_count > 1 and show_progress_bar %}
+          <div class="kc-announcement-bar__meta">
+            {% if show_dots %}
+              <div class="kc-announcement-bar__dots" role="tablist" aria-label="Announcement navigation">
+                {% for block in enabled_blocks %}
+                  <button
+                    class="kc-announcement-bar__dot{% if forloop.first %} is-active{% endif %}"
+                    type="button"
+                    role="tab"
+                    aria-label="Show announcement {{ forloop.index }}"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                    data-kc-ab-dot
+                    data-index="{{ forloop.index0 }}"
+                  ></button>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if show_progress_bar %}
+              <div class="kc-announcement-bar__progress" aria-hidden="true">
+                <span class="kc-announcement-bar__progress-fill" data-kc-ab-progress></span>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const root = document.getElementById('{{ section_id }}');
+    if (!root || root.dataset.kcAbInitialized === 'true') return;
+    root.dataset.kcAbInitialized = 'true';
+
+    const items = Array.from(root.querySelectorAll('[data-kc-ab-item]'));
+    const dots = Array.from(root.querySelectorAll('[data-kc-ab-dot]'));
+    const prevBtn = root.querySelector('[data-kc-ab-prev]');
+    const nextBtn = root.querySelector('[data-kc-ab-next]');
+    const progressFill = root.querySelector('[data-kc-ab-progress]');
+    const viewport = root.querySelector('.kc-announcement-bar__viewport');
+
+    if (!items.length) return;
+
+    const autoplay = root.dataset.autoplay === 'true';
+    const pauseOnHover = root.dataset.pauseOnHover === 'true';
+    const blockCount = Number(root.dataset.blockCount || items.length);
+    const baseRotationMs = Number(root.dataset.rotationMs || 5000);
+    const mobileReduceMotion = root.dataset.mobileReduceMotion === 'true';
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || (mobileReduceMotion && window.innerWidth < 750);
+
+    let currentIndex = Math.max(0, items.findIndex((item) => item.classList.contains('is-active')));
+    if (currentIndex < 0) currentIndex = 0;
+
+    let timer = null;
+    let progressTimer = null;
+    let isPaused = false;
+    let isTransitioning = false;
+    let startedAt = 0;
+    let rotationMs = reducedMotion ? Math.max(baseRotationMs, 6500) : baseRotationMs;
+
+    const clearProgress = () => {
+      if (progressTimer) {
+        window.cancelAnimationFrame(progressTimer);
+        progressTimer = null;
+      }
+      if (progressFill) progressFill.style.width = '0%';
+    };
+
+    const startProgress = () => {
+      if (!progressFill || !autoplay || blockCount < 2 || isPaused) return;
+      clearProgress();
+      startedAt = performance.now();
+      const tick = (now) => {
+        if (isPaused) return;
+        const elapsed = now - startedAt;
+        const percent = Math.min(100, (elapsed / rotationMs) * 100);
+        progressFill.style.width = `${percent}%`;
+        if (percent < 100) {
+          progressTimer = window.requestAnimationFrame(tick);
+        }
+      };
+      progressTimer = window.requestAnimationFrame(tick);
+    };
+
+    const updateDots = () => {
+      dots.forEach((dot, index) => {
+        const active = index === currentIndex;
+        dot.classList.toggle('is-active', active);
+        dot.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+    };
+
+    const measureHeight = () => {
+      const track = root.querySelector('[data-kc-ab-track]');
+      if (!track) return;
+      const activeItem = items[currentIndex];
+      if (!activeItem) return;
+      const activeRect = activeItem.getBoundingClientRect();
+      track.style.minHeight = `${Math.ceil(activeRect.height)}px`;
+    };
+
+    const cleanupStates = (el) => {
+      el.classList.remove('is-entering', 'is-leaving');
+      if (!el.classList.contains('is-active')) {
+        el.style.pointerEvents = 'none';
+      }
+    };
+
+    const goTo = (targetIndex) => {
+      if (blockCount < 2 || isTransitioning || targetIndex === currentIndex) return;
+      const current = items[currentIndex];
+      const next = items[targetIndex];
+      if (!current || !next) return;
+
+      isTransitioning = true;
+      clearTimeout(timer);
+      clearProgress();
+
+      current.classList.remove('is-active');
+      current.classList.add('is-leaving');
+      next.classList.add('is-entering');
+      next.style.pointerEvents = 'auto';
+
+      window.requestAnimationFrame(() => {
+        next.classList.add('is-active');
+        measureHeight();
+        updateDots();
+      });
+
+      window.setTimeout(() => {
+        current.classList.remove('is-leaving');
+        next.classList.remove('is-entering');
+        current.style.pointerEvents = 'none';
+        currentIndex = targetIndex;
+        isTransitioning = false;
+        schedule();
+      }, reducedMotion ? 0 : Number(getComputedStyle(root).getPropertyValue('--kc-ab-transition-ms').replace('ms', '').trim() || 520));
+    };
+
+    const next = () => goTo((currentIndex + 1) % blockCount);
+    const prev = () => goTo((currentIndex - 1 + blockCount) % blockCount);
+
+    const schedule = () => {
+      updateDots();
+      measureHeight();
+      if (!autoplay || blockCount < 2 || isPaused) return;
+      clearTimeout(timer);
+      timer = window.setTimeout(next, rotationMs);
+      startProgress();
+    };
+
+    const pause = () => {
+      isPaused = true;
+      root.classList.add('is-paused');
+      clearTimeout(timer);
+      clearProgress();
+    };
+
+    const resume = () => {
+      if (!autoplay || blockCount < 2) return;
+      isPaused = false;
+      root.classList.remove('is-paused');
+      schedule();
+    };
+
+    if (nextBtn) nextBtn.addEventListener('click', next);
+    if (prevBtn) prevBtn.addEventListener('click', prev);
+
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        const target = Number(dot.dataset.index || 0);
+        goTo(target);
+      });
+    });
+
+    if (pauseOnHover && viewport) {
+      viewport.addEventListener('mouseenter', pause);
+      viewport.addEventListener('mouseleave', resume);
+      viewport.addEventListener('focusin', pause);
+      viewport.addEventListener('focusout', resume);
+    }
+
+    window.addEventListener('resize', measureHeight);
+
+    measureHeight();
+    updateDots();
+    schedule();
+
+    document.addEventListener('shopify:section:unload', (event) => {
+      if (event.detail && event.detail.sectionId !== '{{ section.id }}') return;
+      clearTimeout(timer);
+      clearProgress();
+      if (nextBtn) nextBtn.removeEventListener('click', next);
+      if (prevBtn) prevBtn.removeEventListener('click', prev);
+      window.removeEventListener('resize', measureHeight);
+      root.dataset.kcAbInitialized = 'false';
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "KC Announcement Bar",
+  "tag": "section",
+  "class": "section section-kc-announcement-bar",
+  "settings": [
+    {
+      "type": "select",
+      "id": "style_variant",
+      "label": "Style variant",
+      "default": "classic",
+      "options": [
+        { "value": "classic", "label": "Classic" },
+        { "value": "boutique", "label": "Boutique" },
+        { "value": "campaign", "label": "Campaign" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "width_mode",
+      "label": "Width mode",
+      "default": "full",
+      "options": [
+        { "value": "full", "label": "Full width" },
+        { "value": "page", "label": "Contained" },
+        { "value": "wide-contained", "label": "Wide contained" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "height_mode",
+      "label": "Height",
+      "default": "standard",
+      "options": [
+        { "value": "compact", "label": "Compact" },
+        { "value": "standard", "label": "Standard" },
+        { "value": "tall", "label": "Tall" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Text alignment",
+      "default": "center",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icons",
+      "label": "Show icons",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cta",
+      "label": "Show CTA button when available",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Motion"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_autoplay",
+      "label": "Enable autoplay",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "rotation_interval",
+      "label": "Rotation interval",
+      "min": 3,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "default": 5
+    },
+    {
+      "type": "checkbox",
+      "id": "pause_on_hover",
+      "label": "Pause on hover/focus",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "transition_style",
+      "label": "Transition style",
+      "default": "fade_lift",
+      "options": [
+        { "value": "fade", "label": "Fade" },
+        { "value": "fade_lift", "label": "Fade + lift" },
+        { "value": "slide", "label": "Slide" },
+        { "value": "split_reveal", "label": "Split reveal" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "transition_speed",
+      "label": "Transition speed",
+      "default": "normal",
+      "options": [
+        { "value": "subtle", "label": "Subtle" },
+        { "value": "normal", "label": "Normal" },
+        { "value": "dramatic", "label": "Dramatic" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Show arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dots",
+      "label": "Show dots",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_progress_bar",
+      "label": "Show progress bar",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "mobile_reduce_motion",
+      "label": "Reduce motion on mobile",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme_mode",
+      "label": "Color mode",
+      "default": "theme",
+      "options": [
+        { "value": "theme", "label": "Use theme colors" },
+        { "value": "custom", "label": "Use custom colors" }
+      ]
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#fffdf8"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#1e1b18"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#6f8f6d"
+    },
+    {
+      "type": "color",
+      "id": "cta_text_color",
+      "label": "CTA text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "cta_background_color",
+      "label": "CTA background color",
+      "default": "#1e1b18"
+    },
+    {
+      "type": "checkbox",
+      "id": "border_top",
+      "label": "Show top border",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "border_bottom",
+      "label": "Show bottom border",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_gradient_overlay",
+      "label": "Enable gradient overlay",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_shimmer_line",
+      "label": "Enable shimmer line",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "section_padding_y",
+      "label": "Vertical padding",
+      "min": 8,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "section_padding_x",
+      "label": "Horizontal padding",
+      "min": 10,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Advanced"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_bar",
+      "label": "Stick to top while scrolling",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "use_theme_container_if_available",
+      "label": "Use theme container class if available",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "fallback_max_width",
+      "label": "Fallback max width",
+      "min": 960,
+      "max": 1800,
+      "step": 20,
+      "unit": "px",
+      "default": 1400
+    },
+    {
+      "type": "text",
+      "id": "custom_class",
+      "label": "Custom class"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "Announcement",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "enabled",
+          "label": "Enable this announcement",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Now live"
+        },
+        {
+          "type": "textarea",
+          "id": "message",
+          "label": "Message",
+          "default": "Handmade details, boutique quality, and event-ready pieces built with intention."
+        },
+        {
+          "type": "text",
+          "id": "subtext",
+          "label": "Subtext",
+          "default": "Designed for gift-giving, celebrations, and standout moments."
+        },
+        {
+          "type": "url",
+          "id": "link_url",
+          "label": "Link"
+        },
+        {
+          "type": "text",
+          "id": "cta_text",
+          "label": "CTA text",
+          "default": "Explore"
+        },
+        {
+          "type": "select",
+          "id": "icon_mode",
+          "label": "Icon mode",
+          "default": "built-in",
+          "options": [
+            { "value": "none", "label": "None" },
+            { "value": "built-in", "label": "Built-in icon" }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "icon_choice",
+          "label": "Icon",
+          "default": "sparkles",
+          "options": [
+            { "value": "sparkles", "label": "Sparkles" },
+            { "value": "truck", "label": "Truck" },
+            { "value": "tag", "label": "Tag" },
+            { "value": "calendar", "label": "Calendar" },
+            { "value": "gift", "label": "Gift" },
+            { "value": "heart", "label": "Heart" },
+            { "value": "star", "label": "Star" }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "accent_style",
+          "label": "Accent style",
+          "default": "default",
+          "options": [
+            { "value": "default", "label": "Default" },
+            { "value": "subtle", "label": "Subtle" },
+            { "value": "highlight", "label": "Highlight" },
+            { "value": "urgent", "label": "Urgent" }
+          ]
+        },
+        {
+          "type": "color",
+          "id": "custom_text_color_override",
+          "label": "Custom text color override"
+        },
+        {
+          "type": "color",
+          "id": "custom_accent_color_override",
+          "label": "Custom accent color override"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "KC Announcement Bar",
+      "blocks": [
+        { "type": "announcement" },
+        { "type": "announcement" },
+        { "type": "announcement" }
+      ]
+    }
+  ]
+}
+{% endschema %}
