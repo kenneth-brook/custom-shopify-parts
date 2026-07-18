@@ -1,115 +1,119 @@
 # custom-shopify-parts
 
-A personal library of reusable Shopify theme components (primarily OS 2.0 sections + snippets) built for fast deployment across multiple themes and client builds.
+A personal library of reusable Shopify theme components, primarily Online Store 2.0 sections and snippets, built for fast deployment across multiple themes and client builds.
 
-This repo exists to keep my best “battle-tested” parts portable: countdowns, product grids, utility strips, headers, footers, and other modular building blocks that can be dropped into any modern Shopify theme with minimal friction.
+This repository keeps battle-tested parts portable: countdowns, product grids, utility strips, headers, footers, campaign tools, and other modular building blocks that can be dropped into modern Shopify themes with minimal friction.
 
 ---
 
-## What’s in here
+## Repository structure
 
-**/sections**  
+**`/sections`**  
 Theme sections (`.liquid`) intended for Online Store 2.0 themes.
 
-Planned additions include:
-- countdowns (standard + flip)
-- utility strips (back links / view cart)
-- product display grids (tag-driven)
-- campaign/seasonal promo blocks
-- headers (org-aware / multi-brand routing)
-- footers (brand-safe global variants)
-- preorder helper components
-
-**/snippets** (planned)  
+**`/snippets`**  
 Shared UI primitives and helper fragments used by multiple sections.
 
-**/assets** (planned)  
-Optional lightweight JS/CSS assets if a component needs them. (Most components should remain self-contained unless there’s a strong reason not to.)
+**`/assets`**  
+Lightweight JavaScript and CSS assets used by components.
+
+**`/docs`**  
+Installation notes, configuration references, metafield requirements, known boundaries, and usage examples.
 
 ---
 
 ## Design goals
 
-- **Portable**: copy/paste into a theme and go.
-- **Self-contained by default**: scoped CSS and minimal dependencies.
-- **Theme-friendly**: avoid fighting the host theme; integrate where possible.
-- **Stable naming**: generic names (no client branding baked in).
-- **Configurable**: use section settings, blocks, and safe defaults.
-- **Intern-proof**: predictable settings that are hard to misuse.
-- **Performance-aware**: minimal JS; no heavy libraries unless required.
+- **Portable:** Copy into a theme and configure.
+- **Self-contained by default:** Scoped CSS, defensive JavaScript, and minimal dependencies.
+- **Theme-friendly:** Integrate with the host theme instead of replacing unrelated systems.
+- **Stable naming:** Generic component names with no client branding baked into filenames.
+- **Configurable:** Use section settings, blocks, metafields, and safe defaults.
+- **Editor-friendly:** Predictable controls that are difficult to misuse.
+- **Performance-aware:** Minimal JavaScript and no heavy libraries unless required.
+- **Brand-skinnable:** Components expose CSS variables so one chassis can support multiple visual identities.
 
 ---
 
 ## Requirements
 
 - Shopify Online Store 2.0 theme support
-- A theme that supports custom sections (`/sections/*.liquid`)
-- Some components may assume a standard `page-width` wrapper class exists. If your theme uses a different wrapper, adjust accordingly.
+- A theme that supports custom sections
+- Some components may expect common theme utilities; component documentation notes these assumptions
 
 ---
 
-## Quick start: using a section in a theme
+## Quick start
 
-1. Copy a section file into your theme:
-   - `sections/<name>.liquid`
-
-2. In Shopify Admin:
-   - Online Store → Themes → Customize
-   - Navigate to the template you want (Page/Product/etc.)
-   - Add section → select the new section → configure settings
-
-3. Commit the change to your theme repo as usual.
+1. Copy the component files into their matching theme folders.
+2. Open **Shopify Admin → Online Store → Themes → Customize**.
+3. Navigate to the target template.
+4. Add the new section and configure its settings.
+5. Create any optional metafields listed in the component documentation.
+6. Test in the target theme before publishing.
 
 ---
 
 ## Conventions
 
 ### Naming
-- Sections use **generic names** (e.g. `countdown.liquid`, `utility-strip.liquid`, `product-grid.liquid`)
-- Avoid client/org identifiers in filenames.
+
+- Sections and snippets use generic names, such as `product-card-row.liquid` and `product-card.liquid`.
+- Avoid client or organization identifiers in reusable filenames.
+- Shared classes and variables use the `csp-` namespace to reduce theme collisions.
 
 ### Scoping
-- CSS should be scoped with a section-specific ID:
-  - `assign sid = 'component-' | append: section.id`
-  - `#{{ sid }} { ... }`
-- JS should be defensive:
-  - query within the section root only
-  - avoid global side effects
-  - tolerate multiple instances on a page
+
+- Query JavaScript within the component root.
+- Avoid global side effects.
+- Support multiple component instances on one page.
+- Bind Shopify theme-editor lifecycle events when JavaScript is required.
 
 ### Settings
+
 - Prefer explicit settings and safe fallbacks.
-- Don’t rely on theme globals unless necessary.
-- When a component needs cross-page continuity (example: “Back to Convention” link),
-  use a small shared snippet + a single global script hook.
+- Do not rely on theme globals unless necessary.
+- Document data dependencies, metafields, tag conventions, and platform boundaries.
+
+### Brand contexts
+
+Reusable components should consume CSS variables rather than hardcoded brand rules.
+
+```css
+[data-brand="pancakecat"] { /* overrides */ }
+[data-brand="dirtydog"] { /* overrides */ }
+```
 
 ---
 
 ## Component status
 
-| Component | File | Status | Notes |
-|----------|------|--------|------|
-| Countdown (flip) | `sections/counter.liquid` | ✅ Active | Built for preorder/event use, designed to be reusable |
+| Component | Primary file | Status | Documentation |
+| --- | --- | --- | --- |
+| Product card row | `sections/product-card-row.liquid` | 🧪 Staged | `docs/product-card-row.md` |
 
 ---
 
 ## Roadmap
 
-- [ ] Add snippet library for shared utilities (buttons, link helpers, org routing)
-- [ ] Product grid section (tag-driven filtering + swatches support)
-- [ ] Campaign banner system (date-window controlled)
-- [ ] Header patterns (multi-org safe, intern-editable)
-- [ ] QA harness theme (minimal OS2 theme for testing components in isolation)
-- [ ] Docs: screenshots + configuration examples per component
+- [x] Product card with corner status tabs and color swatches
+- [x] Product row with collection/manual sourcing, tag filtering, sorting, grid, and carousel modes
+- [ ] Countdown sections, standard and flip variants
+- [ ] Campaign banner and scheduled promotion system
+- [ ] Multi-brand header patterns
+- [ ] Reusable footer patterns
+- [ ] Preorder helper components
+- [ ] QA harness theme for isolated testing
+- [ ] Screenshots and configuration examples for each component
 
 ---
 
 ## Notes
 
-This repository is intentionally separated from any day-job codebase. Components may have been inspired by real project needs, but implementation here is kept generic and reusable.
+This repository is intentionally separated from day-job codebases. Components may be inspired by real operational needs, but implementations here remain generic and reusable.
 
 ---
 
 ## License
 
-TBD (private/personal use until otherwise specified).
+TBD. Treat as personal/private-use code until a license is selected.
