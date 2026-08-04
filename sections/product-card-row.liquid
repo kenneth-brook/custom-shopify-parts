@@ -217,7 +217,16 @@
     },
     { "type": "range", "id": "columns_desktop", "label": "Desktop columns", "min": 2, "max": 6, "step": 1, "default": 4 },
     { "type": "range", "id": "columns_tablet", "label": "Tablet columns", "min": 2, "max": 4, "step": 1, "default": 3 },
-    { "type": "range", "id": "columns_mobile", "label": "Mobile carousel cards visible", "min": 1, "max": 2, "step": 1, "default": 1 },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Mobile carousel cards visible",
+      "default": "1",
+      "options": [
+        { "value": "1", "label": "1 card" },
+        { "value": "2", "label": "2 cards" }
+      ]
+    },
     { "type": "range", "id": "card_gap", "label": "Card gap", "min": 8, "max": 48, "step": 2, "unit": "px", "default": 22 },
     { "type": "checkbox", "id": "full_width", "label": "Full width", "default": false },
     { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 48 },

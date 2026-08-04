@@ -1,0 +1,146 @@
+{{ 'tkb-main-product.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'tkb-main-product.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign product_form_id = 'TKBProductForm-' | append: section.id
+  assign has_multi_method = false
+  if product.tags contains 'Multi Method' or product.tags contains 'multi-method' or product.tags contains 'multi method'
+    assign has_multi_method = true
+  endif
+-%}
+
+<section id="TKBMainProduct-{{ section.id }}" class="tkb-product" data-tkb-product>
+  <div class="tkb-product__inner">
+    {% if section.settings.show_breadcrumbs %}
+      <nav class="tkb-product__breadcrumbs" aria-label="Breadcrumb">
+        <a href="{{ routes.root_url }}">Home</a><span>/</span>
+        {% if collection %}<a href="{{ collection.url }}">{{ collection.title }}</a><span>/</span>{% endif %}
+        <span>{{ product.title }}</span>
+      </nav>
+    {% endif %}
+
+    <div class="tkb-product__layout">
+      <div class="tkb-product__gallery">
+        <div class="tkb-product__stage">
+          {% for media in product.media %}
+            <figure class="tkb-product__media{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %} is-active{% endif %}" data-media-id="{{ media.id }}" {% unless media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %}hidden{% endunless %}>
+              {% case media.media_type %}
+                {% when 'image' %}
+                  {{ media | image_url: width: 2200 | image_tag: widths: '480,720,960,1200,1600,2000,2200', sizes: '(min-width: 990px) 55vw, 100vw', loading: 'eager', class: 'tkb-product__image', alt: media.alt }}
+                {% when 'video' %}{{ media | video_tag: controls: true, class: 'tkb-product__video' }}
+                {% when 'external_video' %}{{ media | external_video_tag: class: 'tkb-product__video' }}
+                {% when 'model' %}{{ media | model_viewer_tag: reveal: 'interaction', toggleable: true }}
+              {% endcase %}
+            </figure>
+          {% else %}
+            <div class="tkb-product__placeholder">{{ 'product-1' | placeholder_svg_tag }}</div>
+          {% endfor %}
+        </div>
+
+        {% if product.media.size > 1 %}
+          <div class="tkb-product__thumbs" aria-label="Product media">
+            {% for media in product.media %}
+              <button type="button" class="tkb-product__thumb{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %} is-active{% endif %}" data-media-trigger="{{ media.id }}" aria-label="Show media {{ forloop.index }}" aria-pressed="{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %}true{% else %}false{% endif %}">
+                {{ media.preview_image | image_url: width: 240 | image_tag: widths: '120,180,240', sizes: '88px', loading: 'lazy', alt: media.alt }}
+              </button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="tkb-product__details">
+        {% if section.settings.show_vendor and product.vendor != blank %}<p class="tkb-product__vendor">{{ product.vendor }}</p>{% endif %}
+        <h1 class="tkb-product__title">{{ product.title }}</h1>
+        <div class="tkb-product__price-wrap" aria-live="polite">
+          <span class="tkb-product__price" data-product-price>{{ current_variant.price | money }}</span>
+          <s data-compare-price {% unless current_variant.compare_at_price > current_variant.price %}hidden{% endunless %}>{{ current_variant.compare_at_price | money }}</s>
+        </div>
+
+        {% form 'product', product, id: product_form_id, class: 'tkb-product__form', data-product-form: '' %}
+          <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-id>
+
+          {% unless product.has_only_default_variant %}
+            {% for option in product.options_with_values %}
+              {%- liquid
+                assign option_name = option.name | downcase
+                assign is_color = false
+                if option_name contains 'color' or option_name contains 'colour'
+                  assign is_color = true
+                endif
+              -%}
+              <fieldset class="tkb-product__option" data-option-position="{{ option.position }}">
+                <legend>{{ option.name }} <span data-option-label="{{ option.position }}">{{ option.selected_value }}</span></legend>
+                <div class="tkb-product__values{% if is_color %} tkb-product__values--swatches{% endif %}">
+                  {% for value in option.values %}
+                    {% assign input_id = section.id | append: '-' | append: option.position | append: '-' | append: forloop.index %}
+                    <input class="tkb-product__input" type="radio" id="{{ input_id }}" name="options[{{ option.name | escape }}]" value="{{ value | escape }}" data-option-input data-option-position="{{ option.position }}" {% if value == option.selected_value %}checked{% endif %}>
+                    <label class="tkb-product__label{% if is_color %} tkb-product__swatch{% endif %}" for="{{ input_id }}" {% if is_color %}style="--swatch: {{ value | handleize }}" title="{{ value }}"{% endif %}>
+                      {% if is_color %}<span class="visually-hidden">{{ value }}</span>{% else %}{{ value }}{% endif %}
+                    </label>
+                  {% endfor %}
+                </div>
+              </fieldset>
+            {% endfor %}
+          {% endunless %}
+
+          <div class="tkb-product__purchase">
+            {% if section.settings.show_quantity %}
+              <div class="tkb-product__quantity">
+                <label for="Quantity-{{ section.id }}">Quantity</label>
+                <div><button type="button" data-quantity-minus aria-label="Decrease quantity">−</button><input id="Quantity-{{ section.id }}" type="number" name="quantity" value="1" min="1" data-quantity-input><button type="button" data-quantity-plus aria-label="Increase quantity">+</button></div>
+              </div>
+            {% endif %}
+            <button type="submit" name="add" class="tkb-product__add" data-add-to-cart {% unless current_variant.available %}disabled{% endunless %}><span data-add-label>{% if current_variant.available %}{{ section.settings.add_to_cart_label }}{% else %}Sold out{% endif %}</span></button>
+          </div>
+          <p class="tkb-product__status" data-product-status aria-live="polite"></p>
+          {% if section.settings.show_dynamic_checkout %}{{ form | payment_button }}{% endif %}
+        {% endform %}
+
+        <div class="tkb-product__accordions">
+          {% if product.description != blank %}
+            <details open><summary>Product details <span>+</span></summary><div class="rte">{{ product.description }}</div></details>
+          {% endif %}
+
+          {% capture care_content %}
+            {% if has_multi_method %}
+              {% if product.tags contains 'Embroidered' and product.tags contains 'DTF' %}{% render 'tkb-care-embroidered-dtf' %}
+              {% elsif product.tags contains 'Embroidered' and product.tags contains 'Sublimation' %}{% render 'tkb-care-embroidered-sublimation' %}
+              {% elsif product.tags contains 'DTF' and product.tags contains 'Sublimation' %}{% render 'tkb-care-dtf-sublimation' %}
+              {% else %}{% render 'tkb-care-multi-method' %}{% endif %}
+            {% elsif product.tags contains 'Embroidered' %}{% render 'tkb-care-embroidered' %}
+            {% elsif product.tags contains 'DTF' %}{% render 'tkb-care-dtf' %}
+            {% elsif product.tags contains 'Sublimation' %}{% render 'tkb-care-sublimation' %}
+            {% endif %}
+          {% endcapture %}
+          {% assign care_content_clean = care_content | strip %}
+          {% if care_content_clean != blank %}<details><summary>Item care <span>+</span></summary><div class="rte">{{ care_content }}</div></details>{% endif %}
+
+          {% if section.settings.sizing_content != blank %}<details><summary>{{ section.settings.sizing_heading }} <span>+</span></summary><div class="rte">{{ section.settings.sizing_content }}</div></details>{% endif %}
+          {% if section.settings.production_content != blank %}<details><summary>{{ section.settings.production_heading }} <span>+</span></summary><div class="rte">{{ section.settings.production_content }}</div></details>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="application/json" data-product-variants>{{ product.variants | json }}</script>
+</section>
+
+{% schema %}
+{
+  "name": "TKB main product",
+  "tag": "section",
+  "class": "section-tkb-main-product",
+  "settings": [
+    { "type": "checkbox", "id": "show_breadcrumbs", "label": "Show breadcrumbs", "default": true },
+    { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
+    { "type": "checkbox", "id": "show_quantity", "label": "Show quantity selector", "default": true },
+    { "type": "checkbox", "id": "show_dynamic_checkout", "label": "Show dynamic checkout button", "default": false },
+    { "type": "text", "id": "add_to_cart_label", "label": "Add to cart label", "default": "Add to cart" },
+    { "type": "text", "id": "sizing_heading", "label": "Sizing heading", "default": "Sizing" },
+    { "type": "richtext", "id": "sizing_content", "label": "Sizing information", "default": "<p>Adult sizing S–4X. Review the size chart before ordering.</p>" },
+    { "type": "text", "id": "production_heading", "label": "Production heading", "default": "Production and turnaround" },
+    { "type": "richtext", "id": "production_content", "label": "Production information", "default": "<p>Made to order. Production timing is shown in the product description or at checkout.</p>" }
+  ],
+  "presets": [{ "name": "TKB main product" }]
+}
+{% endschema %}

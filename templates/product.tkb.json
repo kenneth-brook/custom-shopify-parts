@@ -1,0 +1,19 @@
+{
+  "sections": {
+    "main": {
+      "type": "tkb-main-product",
+      "settings": {
+        "show_breadcrumbs": true,
+        "show_vendor": false,
+        "show_quantity": true,
+        "show_dynamic_checkout": false,
+        "add_to_cart_label": "Add to cart",
+        "sizing_heading": "Sizing",
+        "sizing_content": "<p>Adult sizing S–4X. Review the size chart before ordering.</p>",
+        "production_heading": "Production and turnaround",
+        "production_content": "<p>Made to order. Production timing is shown in the product description or at checkout.</p>"
+      }
+    }
+  },
+  "order": ["main"]
+}
