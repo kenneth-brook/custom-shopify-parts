@@ -1,0 +1,329 @@
+{{ 'component-product-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-product-card-row.css' | asset_url | stylesheet_tag }}
+{{ 'tkb-product-row-group.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-card-row.js' | asset_url }}" defer></script>
+
+<section
+  id="TKBProductRowGroup-{{ section.id }}"
+  class="tkb-product-row-group{% if section.settings.full_width %} tkb-product-row-group--full{% endif %}"
+  style="
+    --tkb-group-max-width: {{ section.settings.max_width }}px;
+    --tkb-group-gap: {{ section.settings.row_gap }}px;
+    --tkb-group-padding-top: {{ section.settings.padding_top }}px;
+    --tkb-group-padding-bottom: {{ section.settings.padding_bottom }}px;
+  "
+>
+  <div class="tkb-product-row-group__inner">
+    {%- if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.description != blank or section.settings.group_link != blank -%}
+      <header class="tkb-product-row-group__header tkb-product-row-group__header--{{ section.settings.heading_alignment }}">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="tkb-product-row-group__eyebrow">{{ section.settings.eyebrow }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.heading != blank -%}
+          <h2 class="tkb-product-row-group__heading">{{ section.settings.heading }}</h2>
+        {%- endif -%}
+
+        {%- if section.settings.description != blank -%}
+          <div class="tkb-product-row-group__description rte">{{ section.settings.description }}</div>
+        {%- endif -%}
+
+        {%- if section.settings.group_link != blank -%}
+          <a class="tkb-product-row-group__link" href="{{ section.settings.group_link }}">
+            {{ section.settings.group_link_label | default: 'Explore all' }}
+          </a>
+        {%- endif -%}
+      </header>
+    {%- endif -%}
+
+    <div class="tkb-product-row-group__rows">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign products_to_render = block.settings.manual_products
+          assign source_collection = block.settings.collection
+
+          if block.settings.source_mode == 'collection'
+            assign products_to_render = source_collection.products
+          endif
+
+          if block.settings.source_mode == 'collection' and block.settings.sort_mode == 'newest'
+            assign products_to_render = products_to_render | sort: 'created_at' | reverse
+          elsif block.settings.source_mode == 'collection' and block.settings.sort_mode == 'oldest'
+            assign products_to_render = products_to_render | sort: 'created_at'
+          elsif block.settings.source_mode == 'collection' and block.settings.sort_mode == 'title_asc'
+            assign products_to_render = products_to_render | sort: 'title'
+          elsif block.settings.source_mode == 'collection' and block.settings.sort_mode == 'title_desc'
+            assign products_to_render = products_to_render | sort: 'title' | reverse
+          elsif block.settings.source_mode == 'collection' and block.settings.sort_mode == 'price_asc'
+            assign products_to_render = products_to_render | sort: 'price'
+          elsif block.settings.source_mode == 'collection' and block.settings.sort_mode == 'price_desc'
+            assign products_to_render = products_to_render | sort: 'price' | reverse
+          endif
+
+          assign include_tags = block.settings.include_tags | split: ','
+          assign exclude_tags = block.settings.exclude_tags | split: ','
+          assign displayed_count = 0
+          assign limit = block.settings.product_limit
+        -%}
+
+        <div class="tkb-product-row-group__row" {{ block.shopify_attributes }}>
+          {%- if block.settings.eyebrow != blank or block.settings.heading != blank or block.settings.description != blank or block.settings.view_all_link != blank -%}
+            <header class="tkb-product-row-group__row-header tkb-product-row-group__row-header--{{ block.settings.heading_alignment }}">
+              <div class="tkb-product-row-group__row-copy">
+                {%- if block.settings.eyebrow != blank -%}
+                  <p class="tkb-product-row-group__row-eyebrow">{{ block.settings.eyebrow }}</p>
+                {%- endif -%}
+
+                {%- if block.settings.heading != blank -%}
+                  <h3 class="tkb-product-row-group__row-heading">{{ block.settings.heading }}</h3>
+                {%- endif -%}
+
+                {%- if block.settings.description != blank -%}
+                  <div class="tkb-product-row-group__row-description rte">{{ block.settings.description }}</div>
+                {%- endif -%}
+              </div>
+
+              {%- if block.settings.view_all_link != blank -%}
+                <a class="tkb-product-row-group__row-link" href="{{ block.settings.view_all_link }}">
+                  {{ block.settings.view_all_label | default: 'View all' }}
+                </a>
+              {%- endif -%}
+            </header>
+          {%- endif -%}
+
+          <div
+            id="CSPProductRow-{{ section.id }}-{{ block.id }}"
+            class="csp-product-row csp-product-row--{{ block.settings.layout }}"
+            style="
+              --csp-row-columns-desktop: {{ block.settings.columns_desktop }};
+              --csp-row-columns-tablet: {{ block.settings.columns_tablet }};
+              --csp-row-columns-mobile: {{ block.settings.columns_mobile }};
+              --csp-row-gap: {{ block.settings.card_gap }}px;
+              --csp-row-padding-top: 0px;
+              --csp-row-padding-bottom: 0px;
+            "
+            data-product-row
+            data-layout="{{ block.settings.layout }}"
+          >
+            <div class="csp-product-row__inner">
+              <div class="csp-product-row__viewport" data-row-viewport>
+                <div class="csp-product-row__track" data-row-track>
+                  {%- for product in products_to_render -%}
+                    {%- liquid
+                      assign include_product = true
+
+                      if block.settings.include_tags != blank
+                        if block.settings.tag_match_mode == 'all'
+                          for raw_tag in include_tags
+                            assign requested_tag = raw_tag | strip
+                            unless requested_tag == blank or product.tags contains requested_tag
+                              assign include_product = false
+                              break
+                            endunless
+                          endfor
+                        else
+                          assign include_product = false
+                          for raw_tag in include_tags
+                            assign requested_tag = raw_tag | strip
+                            if requested_tag != blank and product.tags contains requested_tag
+                              assign include_product = true
+                              break
+                            endif
+                          endfor
+                        endif
+                      endif
+
+                      if include_product and block.settings.exclude_tags != blank
+                        for raw_tag in exclude_tags
+                          assign excluded_tag = raw_tag | strip
+                          if excluded_tag != blank and product.tags contains excluded_tag
+                            assign include_product = false
+                            break
+                          endif
+                        endfor
+                      endif
+                    -%}
+
+                    {%- if include_product and displayed_count < limit -%}
+                      <div class="csp-product-row__item">
+                        {% render 'product-card',
+                          product: product,
+                          show_vendor: block.settings.show_vendor,
+                          show_product_type: block.settings.show_product_type,
+                          show_price: block.settings.show_price,
+                          show_compare_price: block.settings.show_compare_price,
+                          show_swatches: block.settings.show_swatches,
+                          max_swatches: block.settings.max_swatches,
+                          show_quick_note: block.settings.show_quick_note,
+                          show_left_badge: block.settings.show_left_badge,
+                          show_right_badge: block.settings.show_right_badge
+                        %}
+                      </div>
+                      {%- assign displayed_count = displayed_count | plus: 1 -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                </div>
+              </div>
+
+              {%- if block.settings.layout == 'carousel' and displayed_count > 1 -%}
+                <div class="csp-product-row__controls" aria-label="{{ block.settings.heading | default: 'Product' | escape }} carousel controls">
+                  <button class="csp-product-row__arrow" type="button" data-row-prev aria-label="Previous products">‹</button>
+                  <button class="csp-product-row__arrow" type="button" data-row-next aria-label="Next products">›</button>
+                </div>
+              {%- endif -%}
+
+              {%- if displayed_count == 0 and request.design_mode -%}
+                <div class="tkb-product-row-group__empty">No products match this row's current source and tag filters.</div>
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "TKB product row group",
+  "tag": "section",
+  "class": "section-tkb-product-row-group",
+  "max_blocks": 12,
+  "settings": [
+    { "type": "header", "content": "Group heading" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Hometown Honors" },
+    { "type": "richtext", "id": "description", "label": "Description" },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading alignment",
+      "default": "left",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" }
+      ]
+    },
+    { "type": "text", "id": "group_link_label", "label": "Group link label", "default": "Explore all" },
+    { "type": "url", "id": "group_link", "label": "Group link" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "checkbox", "id": "full_width", "label": "Full width", "default": false },
+    { "type": "range", "id": "max_width", "label": "Maximum content width", "min": 960, "max": 1800, "step": 40, "unit": "px", "default": 1440 },
+    { "type": "range", "id": "row_gap", "label": "Space between rows", "min": 24, "max": 120, "step": 4, "unit": "px", "default": 64 },
+    { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 64 },
+    { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 64 }
+  ],
+  "blocks": [
+    {
+      "type": "product_row",
+      "name": "Product row",
+      "settings": [
+        { "type": "header", "content": "Row heading" },
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+        { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Educators Corner" },
+        { "type": "richtext", "id": "description", "label": "Description" },
+        {
+          "type": "select",
+          "id": "heading_alignment",
+          "label": "Heading alignment",
+          "default": "left",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "center", "label": "Center" }
+          ]
+        },
+        { "type": "text", "id": "view_all_label", "label": "View all label", "default": "View all" },
+        { "type": "url", "id": "view_all_link", "label": "View all link" },
+
+        { "type": "header", "content": "Product source" },
+        {
+          "type": "select",
+          "id": "source_mode",
+          "label": "Source mode",
+          "default": "collection",
+          "options": [
+            { "value": "collection", "label": "Collection" },
+            { "value": "manual", "label": "Manual products" }
+          ]
+        },
+        { "type": "collection", "id": "collection", "label": "Collection" },
+        { "type": "product_list", "id": "manual_products", "label": "Manual products", "limit": 24 },
+        { "type": "text", "id": "include_tags", "label": "Include tags", "info": "Comma-separated. Leave blank to include all products from the selected source." },
+        {
+          "type": "select",
+          "id": "tag_match_mode",
+          "label": "Include tag matching",
+          "default": "any",
+          "options": [
+            { "value": "any", "label": "Match any included tag" },
+            { "value": "all", "label": "Match all included tags" }
+          ]
+        },
+        { "type": "text", "id": "exclude_tags", "label": "Exclude tags", "info": "Comma-separated." },
+        {
+          "type": "select",
+          "id": "sort_mode",
+          "label": "Sort order",
+          "default": "manual",
+          "options": [
+            { "value": "manual", "label": "Collection order / manual" },
+            { "value": "newest", "label": "Newest" },
+            { "value": "oldest", "label": "Oldest" },
+            { "value": "title_asc", "label": "Alphabetical A–Z" },
+            { "value": "title_desc", "label": "Alphabetical Z–A" },
+            { "value": "price_asc", "label": "Price low to high" },
+            { "value": "price_desc", "label": "Price high to low" }
+          ]
+        },
+        { "type": "range", "id": "product_limit", "label": "Maximum products", "min": 1, "max": 24, "step": 1, "default": 8 },
+
+        { "type": "header", "content": "Row layout" },
+        {
+          "type": "select",
+          "id": "layout",
+          "label": "Layout",
+          "default": "carousel",
+          "options": [
+            { "value": "grid", "label": "Grid" },
+            { "value": "carousel", "label": "Carousel" }
+          ]
+        },
+        { "type": "range", "id": "columns_desktop", "label": "Desktop columns", "min": 2, "max": 6, "step": 1, "default": 4 },
+        { "type": "range", "id": "columns_tablet", "label": "Tablet columns", "min": 2, "max": 4, "step": 1, "default": 3 },
+        {
+          "type": "select",
+          "id": "columns_mobile",
+          "label": "Mobile carousel cards visible",
+          "default": "1",
+          "options": [
+            { "value": "1", "label": "1 card" },
+            { "value": "2", "label": "2 cards" }
+          ]
+        },
+        { "type": "range", "id": "card_gap", "label": "Card gap", "min": 8, "max": 48, "step": 2, "unit": "px", "default": 22 },
+
+        { "type": "header", "content": "Product cards" },
+        { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
+        { "type": "checkbox", "id": "show_product_type", "label": "Show product type", "default": true },
+        { "type": "checkbox", "id": "show_price", "label": "Show price", "default": true },
+        { "type": "checkbox", "id": "show_compare_price", "label": "Show compare-at price", "default": true },
+        { "type": "checkbox", "id": "show_swatches", "label": "Show color swatches", "default": true },
+        { "type": "range", "id": "max_swatches", "label": "Maximum swatches", "min": 1, "max": 8, "step": 1, "default": 5 },
+        { "type": "checkbox", "id": "show_quick_note", "label": "Show card note metafield", "default": true },
+        { "type": "checkbox", "id": "show_left_badge", "label": "Show left badge", "default": true },
+        { "type": "checkbox", "id": "show_right_badge", "label": "Show right badge", "default": true }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "TKB product row group",
+      "blocks": [
+        { "type": "product_row" },
+        { "type": "product_row" }
+      ]
+    }
+  ]
+}
+{% endschema %}
