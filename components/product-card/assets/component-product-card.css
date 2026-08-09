@@ -4,6 +4,7 @@
   --csp-card-muted: #65727a;
   --csp-card-accent: #4e7c9f;
   --csp-card-sage: #94b5a2;
+  --csp-card-gold: #d4af37;
   --csp-card-sale: #a95f4b;
   --csp-card-clearance: #7d3540;
   --csp-card-radius: 18px;
@@ -13,17 +14,27 @@
 
 .csp-product-card {
   position: relative;
+  box-sizing: border-box;
   height: 100%;
   overflow: hidden;
+  border: 5px solid var(--csp-card-bg);
   border-radius: var(--csp-card-radius);
   background: var(--csp-card-bg);
-  box-shadow: var(--csp-card-shadow);
+  box-shadow:
+    0 0 0 2px var(--csp-card-gold),
+    0 0 0 6px var(--csp-card-sage),
+    0 0 0 11px var(--csp-card-bg),
+    var(--csp-card-shadow);
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .csp-product-card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--csp-card-shadow-hover);
+  box-shadow:
+    0 0 0 2px var(--csp-card-gold),
+    0 0 0 6px var(--csp-card-sage),
+    0 0 0 11px var(--csp-card-bg),
+    var(--csp-card-shadow-hover);
 }
 
 .csp-product-card__media-wrap {
