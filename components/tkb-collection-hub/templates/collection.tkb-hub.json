@@ -1,0 +1,18 @@
+{
+  "sections": {
+    "hub_header": {
+      "type": "tkb-collection-hub-header",
+      "settings": {
+        "show_title": true,
+        "show_collection_description": true,
+        "use_collection_image": true,
+        "alignment": "left",
+        "height": 420,
+        "mobile_height": 340,
+        "max_width": 1400,
+        "copy_width": 760
+      }
+    }
+  },
+  "order": ["hub_header"]
+}
