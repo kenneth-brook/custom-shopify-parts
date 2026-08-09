@@ -76,10 +76,15 @@
                     {% assign input_id = section.id | append: '-' | append: option.position | append: '-' | append: forloop.index %}
                     {%- liquid
                       assign swatch_color = '#ffffff'
+                      assign swatch_image = blank
                       assign swatch_key = value | downcase | strip
 
                       if is_color
-                        if swatch_key contains 'olive' or swatch_key contains 'military green'
+                        if value.swatch.image
+                          assign swatch_image = value.swatch.image | image_url: width: 96
+                        elsif value.swatch.color
+                          assign swatch_color = value.swatch.color
+                        elsif swatch_key contains 'olive' or swatch_key contains 'military green'
                           assign swatch_color = '#5F6541'
                         elsif swatch_key contains 'brown'
                           assign swatch_color = '#5A4638'
@@ -97,6 +102,8 @@
                           assign swatch_color = '#2F5DA8'
                         elsif swatch_key == 'red' or swatch_key contains ' red'
                           assign swatch_color = '#B93535'
+                        elsif swatch_key contains 'dark heather'
+                          assign swatch_color = '#4F5152'
                         elsif swatch_key contains 'heather gray' or swatch_key contains 'heather grey'
                           assign swatch_color = '#A3A3A3'
                         elsif swatch_key contains 'gray' or swatch_key contains 'grey'
@@ -105,7 +112,7 @@
                       endif
                     -%}
                     <input class="tkb-product__input" type="radio" id="{{ input_id }}" name="options[{{ option.name | escape }}]" value="{{ value | escape }}" data-option-input data-option-position="{{ option.position }}" {% if value == option.selected_value %}checked{% endif %}>
-                    <label class="tkb-product__label{% if is_color %} tkb-product__swatch{% endif %}" for="{{ input_id }}" {% if is_color %}style="--swatch: {{ swatch_color }};" title="{{ value }}"{% endif %}>
+                    <label class="tkb-product__label{% if is_color %} tkb-product__swatch{% endif %}" for="{{ input_id }}" {% if is_color %}{% if swatch_image != blank %}style="--swatch-image: url('{{ swatch_image }}'); --swatch: {{ swatch_color }};"{% else %}style="--swatch: {{ swatch_color }};"{% endif %} title="{{ value }}"{% endif %}>
                       {% if is_color %}<span class="visually-hidden">{{ value }}</span>{% else %}{{ value }}{% endif %}
                     </label>
                   {% endfor %}
