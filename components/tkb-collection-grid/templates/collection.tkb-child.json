@@ -1,7 +1,7 @@
 {
   "sections": {
     "collection_grid": {
-      "type": "tkb-collection-grid",
+      "type": "tkb-coll-grid",
       "settings": {
         "show_header": true,
         "show_description": true,
