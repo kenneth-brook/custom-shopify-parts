@@ -1,0 +1,140 @@
+{%- liquid
+  assign card_product = product
+  assign left_badge = card_product.metafields.custom.card_left_badge.value | default: card_product.metafields.custom.card_left_badge
+  assign right_badge = card_product.metafields.custom.card_right_badge.value | default: card_product.metafields.custom.card_right_badge
+
+  if left_badge == blank
+    if card_product.tags contains 'Preorder'
+      assign left_badge = 'Preorder'
+    elsif card_product.tags contains 'Custom'
+      assign left_badge = 'Custom'
+    elsif card_product.tags contains 'Personalized'
+      assign left_badge = 'Personalized'
+    elsif card_product.tags contains 'Made to Order'
+      assign left_badge = 'Made to Order'
+    elsif card_product.tags contains 'Limited'
+      assign left_badge = 'Limited'
+    endif
+  endif
+
+  if right_badge == blank
+    if card_product.tags contains 'Clearance'
+      assign right_badge = 'Clearance'
+    elsif card_product.compare_at_price_max > card_product.price
+      assign right_badge = 'Sale'
+    elsif card_product.tags contains 'Last Chance'
+      assign right_badge = 'Last Chance'
+    endif
+  endif
+
+  assign color_option = blank
+  for option in card_product.options_with_values
+    assign option_name_downcase = option.name | downcase
+    if option_name_downcase == 'color' or option_name_downcase == 'colour'
+      assign color_option = option
+      break
+    endif
+  endfor
+
+  assign card_url = card_product.url
+  assign featured_media = card_product.featured_media
+-%}
+
+<article class="csp-product-card" data-product-card>
+  <div class="csp-product-card__media-wrap">
+    <a class="csp-product-card__media" href="{{ card_url }}" aria-label="{{ card_product.title | escape }}">
+      {%- if featured_media != blank -%}
+        {{ featured_media
+          | image_url: width: 900
+          | image_tag:
+            widths: '320, 480, 640, 800, 900',
+            sizes: '(min-width: 1200px) 25vw, (min-width: 750px) 33vw, 50vw',
+            loading: 'lazy',
+            class: 'csp-product-card__image',
+            alt: featured_media.alt | default: card_product.title
+        }}
+      {%- else -%}
+        {{ 'product-apparel-1' | placeholder_svg_tag: 'csp-product-card__placeholder' }}
+      {%- endif -%}
+    </a>
+
+    {%- if show_left_badge and left_badge != blank -%}
+      <span class="csp-product-card__badge csp-product-card__badge--left">{{ left_badge }}</span>
+    {%- endif -%}
+
+    {%- if show_right_badge and right_badge != blank -%}
+      <span class="csp-product-card__badge csp-product-card__badge--right">{{ right_badge }}</span>
+    {%- endif -%}
+  </div>
+
+  <div class="csp-product-card__content">
+    {%- if show_vendor and card_product.vendor != blank -%}
+      <p class="csp-product-card__vendor">{{ card_product.vendor }}</p>
+    {%- endif -%}
+
+    <h3 class="csp-product-card__title"><a href="{{ card_url }}">{{ card_product.title }}</a></h3>
+
+    {%- if show_product_type and card_product.type != blank -%}
+      <p class="csp-product-card__type">{{ card_product.type }}</p>
+    {%- endif -%}
+
+    {%- if show_price -%}
+      <div class="csp-product-card__price" aria-label="Price">
+        {%- if card_product.price_varies -%}
+          <span class="csp-product-card__price-current">From {{ card_product.price_min | money }}</span>
+        {%- else -%}
+          <span class="csp-product-card__price-current">{{ card_product.price | money }}</span>
+        {%- endif -%}
+
+        {%- if show_compare_price and card_product.compare_at_price_max > card_product.price -%}
+          <s class="csp-product-card__price-compare">{{ card_product.compare_at_price_max | money }}</s>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- if show_swatches and color_option != blank -%}
+      <div class="csp-product-card__swatches" aria-label="Available colors">
+        {%- assign rendered_swatches = 0 -%}
+        {%- for option_value in color_option.values -%}
+          {%- if rendered_swatches < max_swatches -%}
+            {%- liquid
+              assign swatch_style = blank
+              assign swatch_image = blank
+              if option_value.swatch.image
+                assign swatch_image = option_value.swatch.image | image_url: width: 80
+              elsif option_value.swatch.color
+                assign swatch_style = option_value.swatch.color
+              else
+                assign swatch_style = option_value | handleize | replace: '-', ' '
+              endif
+            -%}
+            <a
+              class="csp-product-card__swatch"
+              href="{{ option_value.variant.url | default: card_url }}"
+              title="{{ option_value | escape }}"
+              aria-label="{{ option_value | escape }}"
+              {%- if swatch_image != blank -%}
+                style="--csp-swatch-image: url('{{ swatch_image }}');"
+              {%- else -%}
+                style="--csp-swatch-color: {{ swatch_style }};"
+              {%- endif -%}
+            ></a>
+            {%- assign rendered_swatches = rendered_swatches | plus: 1 -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- assign remaining_swatches = color_option.values.size | minus: max_swatches -%}
+        {%- if remaining_swatches > 0 -%}
+          <span class="csp-product-card__swatch-more">+{{ remaining_swatches }}</span>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- if show_quick_note -%}
+      {%- assign quick_note = card_product.metafields.custom.card_note.value | default: card_product.metafields.custom.card_note -%}
+      {%- if quick_note != blank -%}
+        <p class="csp-product-card__note">{{ quick_note }}</p>
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+</article>
