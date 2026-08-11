@@ -1,0 +1,724 @@
+{% comment %}
+  TKB Header
+  Portable Shopify/Horizon-ready header section.
+
+  Features:
+  - announcement bar
+  - logo image or text fallback
+  - desktop dropdown navigation
+  - mobile drawer using native details/summary
+  - search, account, cart icons
+  - Shopify navigation menu setting
+{% endcomment %}
+
+{% liquid
+  assign main_menu = section.settings.main_menu
+  assign logo = section.settings.logo
+  assign logo_width = section.settings.logo_width
+%}
+
+<style>
+  #shopify-section-{{ section.id }} {
+    --tkb-header-bg: {{ section.settings.background_color }};
+    --tkb-header-text: {{ section.settings.text_color }};
+    --tkb-header-accent: {{ section.settings.accent_color }};
+    --tkb-header-border: {{ section.settings.border_color }};
+    --tkb-header-max-width: {{ section.settings.max_width }}px;
+    --tkb-header-logo-width: {{ logo_width }}px;
+    --tkb-header-radius: {{ section.settings.dropdown_radius }}px;
+    --tkb-header-shadow: 0 16px 40px rgba(0, 0, 0, .12);
+    position: relative;
+    z-index: 50;
+  }
+
+  .tkb-announcement {
+    display: {% if section.settings.show_announcement %}block{% else %}none{% endif %};
+    background: var(--tkb-header-accent);
+    color: {{ section.settings.announcement_text_color }};
+    text-align: center;
+    padding: .55rem 1rem;
+    font-size: .9rem;
+    line-height: 1.3;
+  }
+
+  .tkb-announcement a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .tkb-header-wrap {
+    background: var(--tkb-header-bg);
+    color: var(--tkb-header-text);
+    border-bottom: 1px solid var(--tkb-header-border);
+    position: relative;
+    {% if section.settings.sticky_header %}
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    {% endif %}
+  }
+
+  .tkb-header {
+    max-width: var(--tkb-header-max-width);
+    margin: 0 auto;
+    padding: {{ section.settings.padding_y }}px {{ section.settings.padding_x }}px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .tkb-logo {
+    color: var(--tkb-header-text);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .tkb-logo img {
+    display: block;
+    width: var(--tkb-header-logo-width);
+    max-width: 100%;
+    height: auto;
+  }
+
+  .tkb-logo-text {
+    font-weight: 700;
+    letter-spacing: .04em;
+    font-size: 1.25rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .tkb-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .tkb-nav-list,
+  .tkb-submenu,
+  .tkb-submenu-third,
+  .tkb-mobile-menu,
+  .tkb-mobile-submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tkb-nav-list {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+  }
+
+  .tkb-nav-item {
+    position: relative;
+  }
+
+  .tkb-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--tkb-header-text);
+    text-decoration: none;
+    padding: .7rem .85rem;
+    border-radius: 999px;
+    font-size: .95rem;
+    line-height: 1.1;
+    background: transparent;
+  }
+
+  .tkb-nav-link:hover,
+  .tkb-nav-link:focus-visible,
+  .tkb-nav-item:hover > .tkb-nav-link,
+  .tkb-nav-item:focus-within > .tkb-nav-link {
+    color: var(--tkb-header-accent);
+  }
+
+  .tkb-chevron {
+    width: .65rem;
+    height: .65rem;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+  }
+
+  .tkb-submenu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    min-width: 230px;
+    background: var(--tkb-header-bg);
+    border: 1px solid var(--tkb-header-border);
+    border-radius: var(--tkb-header-radius);
+    box-shadow: var(--tkb-header-shadow);
+    padding: .65rem;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+    z-index: 60;
+  }
+
+  .tkb-nav-item:hover > .tkb-submenu,
+  .tkb-nav-item:focus-within > .tkb-submenu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .tkb-submenu-link {
+    color: var(--tkb-header-text);
+    text-decoration: none;
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .65rem .7rem;
+    border-radius: calc(var(--tkb-header-radius) - 4px);
+    font-size: .95rem;
+    line-height: 1.2;
+  }
+
+  .tkb-submenu-link:hover,
+  .tkb-submenu-link:focus-visible {
+    color: var(--tkb-header-accent);
+    background: rgba(0, 0, 0, .04);
+  }
+
+  .tkb-submenu-third {
+    margin: .1rem 0 .45rem .65rem;
+    padding-left: .75rem;
+    border-left: 1px solid var(--tkb-header-border);
+  }
+
+  .tkb-submenu-third a {
+    color: var(--tkb-header-text);
+    opacity: .82;
+    text-decoration: none;
+    display: block;
+    padding: .38rem .5rem;
+    font-size: .87rem;
+    border-radius: .4rem;
+  }
+
+  .tkb-submenu-third a:hover,
+  .tkb-submenu-third a:focus-visible {
+    color: var(--tkb-header-accent);
+    opacity: 1;
+  }
+
+  .tkb-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: .35rem;
+  }
+
+  .tkb-action {
+    color: var(--tkb-header-text);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 999px;
+    position: relative;
+  }
+
+  .tkb-action:hover,
+  .tkb-action:focus-visible {
+    color: var(--tkb-header-accent);
+    background: rgba(0, 0, 0, .04);
+  }
+
+  .tkb-action svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke: currentColor;
+  }
+
+  .tkb-cart-count {
+    position: absolute;
+    top: .18rem;
+    right: .18rem;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 .25rem;
+    border-radius: 999px;
+    background: var(--tkb-header-accent);
+    color: {{ section.settings.cart_count_text_color }};
+    font-size: .65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .tkb-mobile-details {
+    display: none;
+  }
+
+  .tkb-mobile-drawer {
+    display: none;
+  }
+
+  .tkb-mobile-details summary {
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .tkb-mobile-details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  @media screen and (max-width: 989px) {
+    .tkb-header {
+      grid-template-columns: auto 1fr auto;
+      gap: .75rem;
+    }
+
+    .tkb-nav {
+      display: none;
+    }
+
+    .tkb-mobile-details {
+      display: block;
+      position: static;
+    }
+
+    .tkb-logo {
+      justify-self: center;
+    }
+
+    .tkb-actions .tkb-account,
+    .tkb-actions .tkb-search {
+      display: none;
+    }
+
+    .tkb-mobile-details[open] .tkb-mobile-drawer {
+      display: block;
+    }
+
+    .tkb-mobile-drawer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      background: var(--tkb-header-bg);
+      border-bottom: 1px solid var(--tkb-header-border);
+      box-shadow: var(--tkb-header-shadow);
+      padding: .75rem 1rem 1rem;
+      z-index: 60;
+    }
+
+    .tkb-mobile-menu {
+      max-width: var(--tkb-header-max-width);
+      margin-inline: auto;
+    }
+
+    .tkb-mobile-menu a,
+    .tkb-mobile-menu summary {
+      color: var(--tkb-header-text);
+      text-decoration: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .85rem .25rem;
+      border-bottom: 1px solid var(--tkb-header-border);
+      cursor: pointer;
+    }
+
+    .tkb-mobile-menu details summary {
+      list-style: none;
+    }
+
+    .tkb-mobile-menu details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .tkb-mobile-submenu {
+      padding: .2rem 0 .35rem 1rem;
+    }
+
+    .tkb-mobile-submenu a {
+      font-size: .95rem;
+      opacity: .85;
+      padding: .65rem .25rem;
+    }
+
+    .tkb-mobile-extra {
+      display: flex;
+      gap: .75rem;
+      padding-top: 1rem;
+      max-width: var(--tkb-header-max-width);
+      margin-inline: auto;
+    }
+
+    .tkb-mobile-extra a {
+      flex: 1;
+      justify-content: center;
+      border: 1px solid var(--tkb-header-border);
+      border-radius: 999px;
+      padding: .75rem;
+      text-decoration: none;
+      color: var(--tkb-header-text);
+      text-align: center;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .tkb-logo img {
+      width: min(var(--tkb-header-logo-width), 150px);
+    }
+
+    .tkb-header {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+  }
+</style>
+
+{% if section.settings.show_announcement and section.settings.announcement_text != blank %}
+  <div class="tkb-announcement">
+    {% if section.settings.announcement_link != blank %}
+      <a href="{{ section.settings.announcement_link }}">{{ section.settings.announcement_text }}</a>
+    {% else %}
+      {{ section.settings.announcement_text }}
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="tkb-header-wrap">
+  <div class="tkb-header">
+    <details class="tkb-mobile-details">
+      <summary class="tkb-action tkb-mobile-toggle" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </summary>
+
+      <div class="tkb-mobile-drawer">
+        {% if main_menu != blank %}
+          <ul class="tkb-mobile-menu">
+            {% for link in main_menu.links %}
+              <li>
+                {% if link.links != blank %}
+                  <details>
+                    <summary>
+                      <span>{{ link.title }}</span>
+                      <span>+</span>
+                    </summary>
+
+                    <ul class="tkb-mobile-submenu">
+                      {% for child_link in link.links %}
+                        <li>
+                          <a href="{{ child_link.url }}">{{ child_link.title }}</a>
+
+                          {% if child_link.links != blank %}
+                            <ul class="tkb-mobile-submenu">
+                              {% for grandchild_link in child_link.links %}
+                                <li>
+                                  <a href="{{ grandchild_link.url }}">{{ grandchild_link.title }}</a>
+                                </li>
+                              {% endfor %}
+                            </ul>
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </details>
+                {% else %}
+                  <a href="{{ link.url }}">{{ link.title }}</a>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+
+          <div class="tkb-mobile-extra">
+            {% if section.settings.show_search %}
+              <a href="{{ routes.search_url }}">Search</a>
+            {% endif %}
+
+            {% if section.settings.show_account and shop.customer_accounts_enabled %}
+              <a href="{{ routes.account_url }}">Account</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </details>
+
+    <a class="tkb-logo" href="{{ routes.root_url }}" aria-label="{{ shop.name }}">
+      {% if logo != blank %}
+        {{ logo | image_url: width: 600 | image_tag:
+          loading: 'eager',
+          widths: '160, 240, 320, 480, 600',
+          alt: shop.name
+        }}
+      {% else %}
+        <span class="tkb-logo-text">{{ section.settings.logo_text | default: shop.name }}</span>
+      {% endif %}
+    </a>
+
+    <nav class="tkb-nav" aria-label="Main navigation">
+      {% if main_menu != blank %}
+        <ul class="tkb-nav-list">
+          {% for link in main_menu.links %}
+            <li class="tkb-nav-item">
+              <a class="tkb-nav-link" href="{{ link.url }}">
+                <span>{{ link.title }}</span>
+                {% if link.links != blank %}
+                  <span class="tkb-chevron" aria-hidden="true"></span>
+                {% endif %}
+              </a>
+
+              {% if link.links != blank %}
+                <ul class="tkb-submenu">
+                  {% for child_link in link.links %}
+                    <li class="tkb-submenu-item">
+                      <a class="tkb-submenu-link" href="{{ child_link.url }}">
+                        <span>{{ child_link.title }}</span>
+                      </a>
+
+                      {% if child_link.links != blank %}
+                        <ul class="tkb-submenu-third">
+                          {% for grandchild_link in child_link.links %}
+                            <li>
+                              <a href="{{ grandchild_link.url }}">{{ grandchild_link.title }}</a>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </nav>
+
+    <div class="tkb-actions">
+      {% if section.settings.show_search %}
+        <a class="tkb-action tkb-search" href="{{ routes.search_url }}" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke-width="2"/>
+            <path d="m16.5 16.5 3.5 3.5" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </a>
+      {% endif %}
+
+      {% if section.settings.show_account and shop.customer_accounts_enabled %}
+        <a class="tkb-action tkb-account" href="{{ routes.account_url }}" aria-label="Account">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" stroke-width="2"/>
+            <path d="M4 21c1.7-4.2 5-6 8-6s6.3 1.8 8 6" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </a>
+      {% endif %}
+
+      {% if section.settings.show_cart %}
+        <a class="tkb-action" href="{{ routes.cart_url }}" aria-label="Cart">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 7h15l-2 9H8L6 7Z" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M6 7 5 3H2" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="9" cy="20" r="1.5" fill="currentColor" stroke="none"/>
+            <circle cx="18" cy="20" r="1.5" fill="currentColor" stroke="none"/>
+          </svg>
+
+          {% if cart.item_count > 0 %}
+            <span class="tkb-cart-count">{{ cart.item_count }}</span>
+          {% endif %}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "TKB Header",
+  "tag": "section",
+  "class": "section-tkb-header",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Announcement bar"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_announcement",
+      "label": "Show announcement bar",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "announcement_text",
+      "label": "Announcement text",
+      "default": "Custom apparel, gifts, and event essentials made by TKB Custom Design."
+    },
+    {
+      "type": "url",
+      "id": "announcement_link",
+      "label": "Announcement link"
+    },
+    {
+      "type": "color",
+      "id": "announcement_text_color",
+      "label": "Announcement text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo image"
+    },
+    {
+      "type": "text",
+      "id": "logo_text",
+      "label": "Logo text fallback",
+      "default": "TKB Custom Design"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "Logo width",
+      "min": 80,
+      "max": 320,
+      "step": 10,
+      "unit": "px",
+      "default": 180
+    },
+    {
+      "type": "header",
+      "content": "Navigation"
+    },
+    {
+      "type": "link_list",
+      "id": "main_menu",
+      "label": "Main menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_header",
+      "label": "Sticky header",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "Show search",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_account",
+      "label": "Show account",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart",
+      "label": "Show cart",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Max content width",
+      "min": 1000,
+      "max": 1800,
+      "step": 20,
+      "unit": "px",
+      "default": 1320
+    },
+    {
+      "type": "range",
+      "id": "padding_x",
+      "label": "Horizontal padding",
+      "min": 12,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "padding_y",
+      "label": "Vertical padding",
+      "min": 8,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "dropdown_radius",
+      "label": "Dropdown corner radius",
+      "min": 0,
+      "max": 28,
+      "step": 2,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Header background",
+      "default": "#fffaf6"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Header text",
+      "default": "#33241f"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#a56b46"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#eaded6"
+    },
+    {
+      "type": "color",
+      "id": "cart_count_text_color",
+      "label": "Cart count text color",
+      "default": "#ffffff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "TKB Header"
+    }
+  ],
+  "enabled_on": {
+    "groups": ["header"]
+  }
+}
+{% endschema %}
