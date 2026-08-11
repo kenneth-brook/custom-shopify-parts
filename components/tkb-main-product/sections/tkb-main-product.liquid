@@ -24,7 +24,10 @@
       <div class="tkb-product__gallery">
         <div class="tkb-product__stage">
           {% for media in product.media %}
-            <figure class="tkb-product__media{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %} is-active{% endif %}" data-media-id="{{ media.id }}" {% unless media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %}hidden{% endunless %}>
+            {%- liquid
+              assign media_group = media.alt | split: '|' | first | strip
+            -%}
+            <figure class="tkb-product__media{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %} is-active{% endif %}" data-media-id="{{ media.id }}" data-media-group="{{ media_group | escape }}" {% unless media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %}hidden{% endunless %}>
               {% case media.media_type %}
                 {% when 'image' %}
                   {{ media | image_url: width: 2200 | image_tag: widths: '480,720,960,1200,1600,2000,2200', sizes: '(min-width: 990px) 55vw, 100vw', loading: 'eager', class: 'tkb-product__image', alt: media.alt }}
@@ -41,7 +44,10 @@
         {% if product.media.size > 1 %}
           <div class="tkb-product__thumbs" aria-label="Product media">
             {% for media in product.media %}
-              <button type="button" class="tkb-product__thumb{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %} is-active{% endif %}" data-media-trigger="{{ media.id }}" aria-label="Show media {{ forloop.index }}" aria-pressed="{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %}true{% else %}false{% endif %}">
+              {%- liquid
+                assign media_group = media.alt | split: '|' | first | strip
+              -%}
+              <button type="button" class="tkb-product__thumb{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %} is-active{% endif %}" data-media-trigger="{{ media.id }}" data-media-group="{{ media_group | escape }}" aria-label="Show media {{ forloop.index }}" aria-pressed="{% if media.id == current_variant.featured_media.id or current_variant.featured_media == blank and forloop.first %}true{% else %}false{% endif %}">
                 {{ media.preview_image | image_url: width: 240 | image_tag: widths: '120,180,240', sizes: '88px', loading: 'lazy', alt: media.alt }}
               </button>
             {% endfor %}
@@ -69,7 +75,7 @@
                   assign is_color = true
                 endif
               -%}
-              <fieldset class="tkb-product__option" data-option-position="{{ option.position }}">
+              <fieldset class="tkb-product__option" data-option-position="{{ option.position }}"{% if is_color %} data-color-option="true"{% endif %}>
                 <legend>{{ option.name }} <span data-option-label="{{ option.position }}">{{ option.selected_value }}</span></legend>
                 <div class="tkb-product__values{% if is_color %} tkb-product__values--swatches{% endif %}">
                   {% for value in option.values %}
