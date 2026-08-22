@@ -1,0 +1,111 @@
+{{ 'pancake-space-hero.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'pancake-space-hero.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign hero_id = 'PancakeSpaceHero-' | append: section.id
+  assign bg = section.settings.background_image
+  assign mascot = section.settings.mascot_image
+  assign pancake = section.settings.pancake_image
+-%}
+
+<section
+  id="{{ hero_id }}"
+  class="pc-space-hero"
+  data-pc-space-hero
+  data-max-pancakes="{{ section.settings.max_pancakes }}"
+  data-min-duration="{{ section.settings.min_duration }}"
+  data-max-duration="{{ section.settings.max_duration }}"
+  data-min-size="{{ section.settings.min_size }}"
+  data-max-size="{{ section.settings.max_size }}"
+  data-spawn-delay="{{ section.settings.spawn_delay }}"
+  style="
+    --pc-hero-min-height: {{ section.settings.desktop_height }}vh;
+    --pc-hero-mobile-height: {{ section.settings.mobile_height }}vh;
+    --pc-overlay: {{ section.settings.overlay_color }};
+    --pc-overlay-opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+    --pc-copy-color: {{ section.settings.text_color }};
+    --pc-mascot-width: {{ section.settings.mascot_width }}px;
+  "
+>
+  <div class="pc-space-hero__background">
+    {% if bg != blank %}
+      {{ bg | image_url: width: 2400 | image_tag:
+        loading: 'eager',
+        widths: '960, 1440, 1920, 2400',
+        sizes: '100vw',
+        class: 'pc-space-hero__background-image',
+        alt: ''
+      }}
+    {% endif %}
+    <div class="pc-space-hero__overlay"></div>
+  </div>
+
+  <div class="pc-space-hero__pancakes" aria-hidden="true" data-pancake-layer>
+    {% if pancake != blank %}
+      <template data-pancake-template>
+        <img src="{{ pancake | image_url: width: 480 }}" alt="" loading="eager">
+      </template>
+    {% endif %}
+  </div>
+
+  <div class="pc-space-hero__content">
+    {% if mascot != blank %}
+      <div class="pc-space-hero__mascot-wrap">
+        {{ mascot | image_url: width: 1200 | image_tag:
+          loading: 'eager',
+          widths: '320, 480, 720, 960, 1200',
+          sizes: '(max-width: 749px) 72vw, 520px',
+          class: 'pc-space-hero__mascot',
+          alt: section.settings.mascot_alt
+        }}
+      </div>
+    {% endif %}
+
+    <div class="pc-space-hero__copy">
+      {% if section.settings.heading != blank %}
+        <h1>{{ section.settings.heading }}</h1>
+      {% endif %}
+
+      {% if section.settings.subheading != blank %}
+        <div class="pc-space-hero__subheading">{{ section.settings.subheading }}</div>
+      {% endif %}
+
+      {% if section.settings.button_label != blank and section.settings.button_link != blank %}
+        <a class="pc-space-hero__button" href="{{ section.settings.button_link }}">{{ section.settings.button_label }}</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Pancake space hero",
+  "tag": "section",
+  "class": "section-pancake-space-hero",
+  "settings": [
+    { "type": "image_picker", "id": "background_image", "label": "Space background" },
+    { "type": "image_picker", "id": "mascot_image", "label": "Pancake Cat image" },
+    { "type": "text", "id": "mascot_alt", "label": "Mascot alt text", "default": "Pancake Cat" },
+    { "type": "image_picker", "id": "pancake_image", "label": "Floating pancake plate image" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Pancake Cat" },
+    { "type": "richtext", "id": "subheading", "label": "Subheading", "default": "<p>Quality Gaming Gear & Meme Worthy Merch.</p>" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop Pancake Cat" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#ffffff" },
+    { "type": "color", "id": "overlay_color", "label": "Overlay color", "default": "#000000" },
+    { "type": "range", "id": "overlay_opacity", "label": "Overlay opacity", "min": 0, "max": 80, "step": 5, "unit": "%", "default": 20 },
+    { "type": "range", "id": "desktop_height", "label": "Desktop hero height", "min": 55, "max": 100, "step": 5, "unit": "vh", "default": 85 },
+    { "type": "range", "id": "mobile_height", "label": "Mobile hero height", "min": 55, "max": 100, "step": 5, "unit": "vh", "default": 75 },
+    { "type": "range", "id": "mascot_width", "label": "Mascot max width", "min": 260, "max": 760, "step": 20, "unit": "px", "default": 520 },
+    { "type": "range", "id": "max_pancakes", "label": "Max floating pancakes", "min": 2, "max": 12, "step": 1, "default": 7 },
+    { "type": "range", "id": "min_duration", "label": "Fastest crossing", "min": 10, "max": 40, "step": 1, "unit": "s", "default": 18 },
+    { "type": "range", "id": "max_duration", "label": "Slowest crossing", "min": 15, "max": 60, "step": 1, "unit": "s", "default": 34 },
+    { "type": "range", "id": "min_size", "label": "Smallest pancake", "min": 50, "max": 180, "step": 10, "unit": "px", "default": 80 },
+    { "type": "range", "id": "max_size", "label": "Largest pancake", "min": 120, "max": 320, "step": 10, "unit": "px", "default": 220 },
+    { "type": "range", "id": "spawn_delay", "label": "Spawn delay", "min": 500, "max": 5000, "step": 250, "unit": "ms", "default": 1800 }
+  ],
+  "presets": [
+    { "name": "Pancake space hero" }
+  ]
+}
+{% endschema %}
